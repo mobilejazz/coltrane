@@ -17,8 +17,8 @@ android {
     buildToolsVersion "19.1.0"
 
     defaultConfig {
-        applicationId "com.mobilejazz.coltrane.android"
-        minSdkVersion 14
+        applicationId "com.mobilejazz.coltrane.example"
+        minSdkVersion 7
         targetSdkVersion 19
         versionCode 1
         versionName "0.0.1"

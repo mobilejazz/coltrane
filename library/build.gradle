@@ -5,8 +5,8 @@ android {
     buildToolsVersion "19.1.0"
 
     defaultConfig {
-        applicationId "com.firmaprofesional.biid.library"
-        minSdkVersion 14
+        applicationId "com.mobilejazz.coltrane.library"
+        minSdkVersion 7
         targetSdkVersion 19
         versionCode 1
         versionName "0.0.1"
@@ -30,6 +30,7 @@ dependencies {
     }
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }
+
 
 android.libraryVariants.all { variant ->
     task("generate${variant.name}Javadoc", type: Javadoc) {
