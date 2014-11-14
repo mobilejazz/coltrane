@@ -15,7 +15,6 @@
  * limitations under the License.
  -->
 <resources>
-
-    <string name="app_name">aFileChooserExample</string>
+    <string name="app_name">Coltrane Example Application</string>
     <string name="chooser_title">Lorem ipsum</string>
 </resources>
