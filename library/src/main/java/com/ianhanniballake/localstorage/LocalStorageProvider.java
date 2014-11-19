@@ -1,12 +1,14 @@
 
 package com.ianhanniballake.localstorage;
 
+import android.annotation.TargetApi;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.os.Build;
 import android.os.CancellationSignal;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
@@ -23,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+@TargetApi(Build.VERSION_CODES.KITKAT)
 public class LocalStorageProvider extends DocumentsProvider {
 
     public static final String AUTHORITY = "com.ianhanniballake.localstorage.documents";

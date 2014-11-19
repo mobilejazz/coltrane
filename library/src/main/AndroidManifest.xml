@@ -13,10 +13,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Additional Changes:
+ *
+ * Fixed lint warnings and errors.
+ *
+ * Copyright (C) 20014 mobilejazz.com
  -->
  <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mobilejazz.coltrane.library">
-
-    <uses-sdk android:minSdkVersion="7" />
 
 </manifest>

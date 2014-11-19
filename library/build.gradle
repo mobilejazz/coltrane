@@ -1,13 +1,13 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "19.1.0"
+    compileSdkVersion 21
+    buildToolsVersion "21.1.1"
 
     defaultConfig {
         applicationId "com.mobilejazz.coltrane.library"
-        minSdkVersion 7
-        targetSdkVersion 19
+        minSdkVersion 14
+        targetSdkVersion 21
         versionCode 1
         versionName "0.0.1"
     }
@@ -29,7 +29,7 @@ dependencies {
         mavenCentral()
     }
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile "com.android.support:support-v4:19.+"
+    compile "com.android.support:support-v4:21.0.2"
 }
 
 
@@ -47,3 +47,5 @@ android.libraryVariants.all { variant ->
         exclude '**/R.java'
     }
 }
+
+apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'

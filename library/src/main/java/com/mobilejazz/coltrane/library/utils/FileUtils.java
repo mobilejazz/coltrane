@@ -12,10 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Additional Changes:
+ *
+ * Fixed lint warnings and errors.
+ *
+ * Copyright (C) 20014 mobilejazz.com
  */
 
 package com.mobilejazz.coltrane.library.utils;
 
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -84,10 +91,7 @@ public class FileUtils {
      * @return Whether the URI is a local one.
      */
     public static boolean isLocal(String url) {
-        if (url != null && !url.startsWith("http://") && !url.startsWith("https://")) {
-            return true;
-        }
-        return false;
+        return url != null && !url.startsWith("http://") && !url.startsWith("https://");
     }
 
     /**
@@ -240,37 +244,9 @@ public class FileUtils {
         return null;
     }
 
-    /**
-     * Get a file path from a Uri. This will get the the path for Storage Access
-     * Framework Documents, as well as the _data field for the MediaStore and
-     * other file-based ContentProviders.<br>
-     * <br>
-     * Callers should check whether the path is local before assuming it
-     * represents a local file.
-     * 
-     * @param context The context.
-     * @param uri The Uri to query.
-     * @see #isLocal(String)
-     * @see #getFile(Context, Uri)
-     * @author paulburke
-     */
-    public static String getPath(final Context context, final Uri uri) {
-
-        if (DEBUG)
-            Log.d(TAG + " File -",
-                    "Authority: " + uri.getAuthority() +
-                            ", Fragment: " + uri.getFragment() +
-                            ", Port: " + uri.getPort() +
-                            ", Query: " + uri.getQuery() +
-                            ", Scheme: " + uri.getScheme() +
-                            ", Host: " + uri.getHost() +
-                            ", Segments: " + uri.getPathSegments().toString()
-                    );
-
-        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-
-        // DocumentProvider
-        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    protected static String getPathKitKat(final Context context, final Uri uri) {
+        if (DocumentsContract.isDocumentUri(context, uri)) {
             // LocalStorageProvider
             if (isLocalStorageDocument(uri)) {
                 // The path is the id
@@ -313,15 +289,22 @@ public class FileUtils {
                 }
 
                 final String selection = "_id=?";
-                final String[] selectionArgs = new String[] {
+                final String[] selectionArgs = new String[]{
                         split[1]
                 };
 
                 return getDataColumn(context, contentUri, selection, selectionArgs);
             }
+        } else {
+            return getPathNoDocumentUri(context, uri);
         }
+
+        return null;
+    }
+
+    protected static String getPathNoDocumentUri(final Context context, final Uri uri) {
         // MediaStore (and general)
-        else if ("content".equalsIgnoreCase(uri.getScheme())) {
+        if ("content".equalsIgnoreCase(uri.getScheme())) {
 
             // Return the remote address
             if (isGooglePhotosUri(uri))
@@ -335,6 +318,43 @@ public class FileUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Get a file path from a Uri. This will get the the path for Storage Access
+     * Framework Documents, as well as the _data field for the MediaStore and
+     * other file-based ContentProviders.<br>
+     * <br>
+     * Callers should check whether the path is local before assuming it
+     * represents a local file.
+     * 
+     * @param context The context.
+     * @param uri The Uri to query.
+     * @see #isLocal(String)
+     * @see #getFile(Context, Uri)
+     * @author paulburke
+     */
+    public static String getPath(final Context context, final Uri uri) {
+
+        if (DEBUG)
+            Log.d(TAG + " File -",
+                    "Authority: " + uri.getAuthority() +
+                            ", Fragment: " + uri.getFragment() +
+                            ", Port: " + uri.getPort() +
+                            ", Query: " + uri.getQuery() +
+                            ", Scheme: " + uri.getScheme() +
+                            ", Host: " + uri.getHost() +
+                            ", Segments: " + uri.getPathSegments().toString()
+                    );
+
+        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+
+        // DocumentProvider
+        if (isKitKat) {
+            return getPathKitKat(context, uri);
+        } else {
+            return getPathNoDocumentUri(context, uri);
+        }
     }
 
     /**
