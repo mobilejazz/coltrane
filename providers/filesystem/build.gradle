@@ -21,5 +21,6 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.jakewharton.timber:timber:2.5.0'
     compile project(':library')
 }
