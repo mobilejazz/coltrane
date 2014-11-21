@@ -6,16 +6,15 @@ import android.database.Cursor;
 import android.graphics.Point;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
-import android.provider.DocumentsProvider;
 
 import java.io.FileNotFoundException;
 
 @TargetApi(19)
-public class DocumentsProviderAdapter extends DocumentsProvider {
+public class DocumentsProviderAdapter extends android.provider.DocumentsProvider {
 
-    private DocumentBrowser mDelegate;
+    private DocumentsProvider mDelegate;
 
-    public DocumentsProviderAdapter(DocumentBrowser delegate) {
+    public DocumentsProviderAdapter(DocumentsProvider delegate) {
         this.mDelegate = delegate;
     }
 

@@ -8,7 +8,7 @@ import android.os.ParcelFileDescriptor;
 
 import java.io.FileNotFoundException;
 
-public interface DocumentBrowser {
+public interface DocumentsProvider {
 
     public Cursor queryRoots(String[] projection) throws FileNotFoundException;
 

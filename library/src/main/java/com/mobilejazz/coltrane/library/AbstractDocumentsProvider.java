@@ -7,7 +7,7 @@ import android.os.CancellationSignal;
 
 import java.io.FileNotFoundException;
 
-public abstract class AbstractDocumentBrowser implements DocumentBrowser {
+public abstract class AbstractDocumentsProvider implements DocumentsProvider {
 
     @Override
     public AssetFileDescriptor openDocumentThumbnail(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException {
