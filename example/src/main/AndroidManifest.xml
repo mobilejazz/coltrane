@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
- * Copyright (C) 2013 Paul Burke
+/*
+ * Copyright (C) 2014 Mobilejazz
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-  *
- * Additional Changes:
- *
- * Fixed lint warnings and errors.
- *
- * Copyright (C) 20014 mobilejazz.com
+ */
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mobilejazz.coltrane.example">
@@ -29,7 +25,8 @@
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name" >
+        android:label="@string/app_name"
+        android:name=".ExampleApplication">
         <activity
             android:name=".FileChooserExampleActivity"
             android:theme="@style/AppTheme" >
@@ -40,33 +37,23 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.mobilejazz.coltrane.library.FileChooserActivity"
-            android:enabled="@bool/use_activity"
-            android:exported="true"
+            android:name="com.mobilejazz.coltrane.ui.DocumentBrowserActivity"
             android:icon="@drawable/ic_chooser"
             android:label="@string/choose_file"
             android:theme="@style/ChooserTheme" >
-            <intent-filter>
-                <action android:name="android.intent.action.GET_CONTENT" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.OPENABLE" />
-
-                <data android:mimeType="*/*" />
-            </intent-filter>
         </activity>
 
-        <provider
-            android:name="com.ianhanniballake.localstorage.LocalStorageProvider"
-            android:authorities="com.ianhanniballake.localstorage.documents"
-            android:enabled="@bool/use_provider"
-            android:exported="true"
-            android:grantUriPermissions="true"
-            android:permission="android.permission.MANAGE_DOCUMENTS" >
-            <intent-filter>
-                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
-            </intent-filter>
-        </provider>
+        <!--<provider-->
+            <!--android:name="com.mobilejazz.coltrane.provider.filesystem.FileSystemAdapter"-->
+            <!--android:authorities="com.mobilejazz.coltrane.provider.filesystem"-->
+            <!--android:enabled="@bool/use_provider"-->
+            <!--android:exported="true"-->
+            <!--android:grantUriPermissions="true"-->
+            <!--android:permission="android.permission.MANAGE_DOCUMENTS" >-->
+            <!--<intent-filter>-->
+                <!--<action android:name="android.content.action.DOCUMENTS_PROVIDER" />-->
+            <!--</intent-filter>-->
+        <!--</provider>-->
     </application>
 
 </manifest>

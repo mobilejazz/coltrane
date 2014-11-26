@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Paul Burke
+ * Copyright (C) 2014 Mobilejazz
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,17 @@
 package com.mobilejazz.coltrane.example;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.mobilejazz.coltrane.library.utils.FileUtils;
+import com.mobilejazz.coltrane.ui.DocumentBrowserActivity;
 
-/**
- * @author paulburke (ipaulpro)
- */
 public class FileChooserExampleActivity extends Activity {
 
     private static final String TAG = "FileChooserExampleActivity";
@@ -58,16 +54,13 @@ public class FileChooserExampleActivity extends Activity {
     }
 
     private void showChooser() {
-        // Use the GET_CONTENT intent from the utility class
-        Intent target = FileUtils.createGetContentIntent();
-        // Create the chooser Intent
-        Intent intent = Intent.createChooser(
-                target, getString(com.mobilejazz.coltrane.example.R.string.chooser_title));
-        try {
-            startActivityForResult(intent, REQUEST_CODE);
-        } catch (ActivityNotFoundException e) {
-            // The reason for the existence of aFileChooser
-        }
+//        // Use the GET_CONTENT intent from the utility class
+//        Intent target = FileUtils.createGetContentIntent();
+//        // Create the chooser Intent
+//        Intent intent = Intent.createChooser(target, getString(com.mobilejazz.coltrane.example.R.string.chooser_title));
+
+        Intent selectFile = new Intent(this, DocumentBrowserActivity.class);
+        startActivityForResult(selectFile, REQUEST_CODE);
     }
 
     @Override
@@ -78,13 +71,10 @@ public class FileChooserExampleActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     if (data != null) {
                         // Get the URI of the selected file
-                        final Uri uri = data.getData();
-                        Log.i(TAG, "Uri = " + uri.toString());
+                        String documentId = data.getStringExtra(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
                         try {
-                            // Get the file path from the URI
-                            final String path = FileUtils.getPath(this, uri);
                             Toast.makeText(FileChooserExampleActivity.this,
-                                    "File Selected: " + path, Toast.LENGTH_LONG).show();
+                                    "File Selected: " + documentId, Toast.LENGTH_LONG).show();
                         } catch (Exception e) {
                             Log.e("FileSelectorTestActivity", "File select error", e);
                         }
