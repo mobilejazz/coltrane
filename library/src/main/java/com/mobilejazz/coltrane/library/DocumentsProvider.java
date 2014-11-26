@@ -30,4 +30,6 @@ public interface DocumentsProvider {
 
     public Cursor querySearchDocuments(String rootId, String query, String[] projection) throws FileNotFoundException;
 
+    public String getId();
+
 }

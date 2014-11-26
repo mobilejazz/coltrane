@@ -38,4 +38,5 @@ public abstract class AbstractDocumentsProvider implements DocumentsProvider {
     public Cursor querySearchDocuments(String rootId, String query, String[] projection) throws FileNotFoundException {
         throw new UnsupportedOperationException("Search not supported");
     }
+
 }
