@@ -1,2 +1,2 @@
-include ':library', ':filesystem', ':example'
+include ':library', ':filesystem', ':example', ':document-picker'
 project(':filesystem').projectDir = new File('providers/filesystem')

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Paul Burke
+ * Copyright (C) 2014 Mobilejazz
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,25 @@
  * limitations under the License.
  */
 
-package com.mobilejazz.coltrane.library;
+package com.mobilejazz.coltrane.ui;
 
 import android.app.Activity;
+import android.app.ListFragment;
+import android.app.LoaderManager;
+import android.content.Loader;
+import android.database.Cursor;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.v4.app.ListFragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
 import android.view.View;
 import android.widget.ListView;
 
-import java.io.File;
-import java.util.List;
+import com.mobilejazz.coltrane.library.DocumentsProvider;
+import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
+import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 
 /**
  * Fragment that displays a list of Files in a given path.
- * 
- * @version 2013-12-11
- * @author paulburke (ipaulpro)
  */
-public class FileListFragment extends ListFragment implements
-        LoaderManager.LoaderCallbacks<List<File>> {
+public class DocumentListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     /**
      * Interface to listen for events.
@@ -44,15 +41,16 @@ public class FileListFragment extends ListFragment implements
         /**
          * Called when a file is selected from the list.
          *
-         * @param file The file selected
+         * @param document A cursor to the selected document
          */
-        public void onFileSelected(File file);
+        public void onDocumentSelected(DocumentCursor document);
     }
 
     private static final int LOADER_ID = 0;
 
-    private FileListAdapter mAdapter;
-    private String mPath;
+    private DocumentListAdapter mAdapter;
+    private DocumentsProvider mProvider;
+    private String mCurrentDocumentId;
 
     private Callbacks mListener;
 
@@ -62,10 +60,11 @@ public class FileListFragment extends ListFragment implements
      * @param path The absolute path of the file (directory) to display.
      * @return A new Fragment with the given file path.
      */
-    public static FileListFragment newInstance(String path) {
-        FileListFragment fragment = new FileListFragment();
+    public static DocumentListFragment newInstance(String providerId, String path) {
+        DocumentListFragment fragment = new DocumentListFragment();
         Bundle args = new Bundle();
-        args.putString(FileChooserActivity.PATH, path);
+        args.putString(DocumentBrowserActivity.PATH, path);
+        args.putString(DocumentBrowserActivity.PROVIDER, providerId);
         fragment.setArguments(args);
 
         return fragment;
@@ -87,41 +86,41 @@ public class FileListFragment extends ListFragment implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAdapter = new FileListAdapter(getActivity());
-        mPath = getArguments() != null ? getArguments().getString(
-                FileChooserActivity.PATH) : Environment
-                .getExternalStorageDirectory().getAbsolutePath();
+        mAdapter = new DocumentListAdapter(getActivity(), null);
+        String providerId = getArguments().getString(DocumentBrowserActivity.PROVIDER);
+        mProvider = DocumentsProviderRegistry.get().getProvider(providerId);
+        mCurrentDocumentId = getArguments().getString(DocumentBrowserActivity.PATH);
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        setEmptyText(getString(com.mobilejazz.coltrane.library.R.string.empty_directory));
+    public void onStart() {
+        super.onStart();
+
+        setEmptyText(getString(R.string.empty_directory));
         setListAdapter(mAdapter);
         setListShown(false);
 
-        getLoaderManager().initLoader(LOADER_ID, null, this);
-
-        super.onActivityCreated(savedInstanceState);
+        getLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        FileListAdapter adapter = (FileListAdapter) l.getAdapter();
+        DocumentListAdapter adapter = (DocumentListAdapter) l.getAdapter();
         if (adapter != null) {
-            File file = (File) adapter.getItem(position);
-            mPath = file.getAbsolutePath();
-            mListener.onFileSelected(file);
+            DocumentCursor c = (DocumentCursor)adapter.getCursor();
+            c.moveToPosition(position);
+            mListener.onDocumentSelected(c);
         }
     }
 
     @Override
-    public Loader<List<File>> onCreateLoader(int id, Bundle args) {
-        return new FileLoader(getActivity(), mPath);
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new DocumentLoader(getActivity(), mProvider, mCurrentDocumentId);
     }
 
     @Override
-    public void onLoadFinished(Loader<List<File>> loader, List<File> data) {
-        mAdapter.setListItems(data);
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mAdapter.changeCursor(data);
 
         if (isResumed())
             setListShown(true);
@@ -130,7 +129,7 @@ public class FileListFragment extends ListFragment implements
     }
 
     @Override
-    public void onLoaderReset(Loader<List<File>> loader) {
-        mAdapter.clear();
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mAdapter.changeCursor(null);
     }
 }

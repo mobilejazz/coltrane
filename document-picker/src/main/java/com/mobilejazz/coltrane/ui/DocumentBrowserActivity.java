@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Paul Burke
+ * Copyright (C) 2014 Mobilejazz
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,69 +14,79 @@
  * limitations under the License.
  */
 
-package com.mobilejazz.coltrane.library;
+package com.mobilejazz.coltrane.ui;
 
 import android.app.ActionBar;
+import android.app.Activity;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentManager.BackStackEntry;
-import android.support.v4.app.FragmentManager.OnBackStackChangedListener;
-import android.support.v4.app.FragmentTransaction;
+import android.provider.DocumentsContract;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import java.io.File;
+import com.mobilejazz.coltrane.library.DocumentsProvider;
+import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
+import com.mobilejazz.coltrane.library.utils.DocumentCursor;
+import com.mobilejazz.coltrane.library.utils.RootCursor;
+
+import java.io.FileNotFoundException;
 
 /**
  * Main Activity that handles the FileListFragments
- *
- * @version 2013-06-25
- * @author paulburke (ipaulpro)
  */
-public class FileChooserActivity extends FragmentActivity implements
-        OnBackStackChangedListener, FileListFragment.Callbacks {
+public class DocumentBrowserActivity extends Activity implements
+        FragmentManager.OnBackStackChangedListener, DocumentListFragment.Callbacks {
 
+    public static final String PROVIDER = "provider";
     public static final String PATH = "path";
-    public static final String EXTERNAL_BASE_PATH = Environment
-            .getExternalStorageDirectory().getAbsolutePath();
 
-    private static final boolean HAS_ACTIONBAR = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
+    public static final String RESULT_ID = DocumentsContract.Document.COLUMN_DOCUMENT_ID;
 
     private FragmentManager mFragmentManager;
     private BroadcastReceiver mStorageListener = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Toast.makeText(context, com.mobilejazz.coltrane.library.R.string.storage_removed, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, R.string.storage_removed, Toast.LENGTH_LONG).show();
             finishWithResult(null);
         }
     };
 
-    private String mPath;
+    private DocumentsProvider mProvider;
+    private String mCurrentDocumentId;
+    private String mRootId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mFragmentManager = getSupportFragmentManager();
+        mFragmentManager = getFragmentManager();
         mFragmentManager.addOnBackStackChangedListener(this);
 
-        if (savedInstanceState == null) {
-            mPath = EXTERNAL_BASE_PATH;
-            addFragment();
-        } else {
-            mPath = savedInstanceState.getString(PATH);
+        mProvider = DocumentsProviderRegistry.get().getAll().iterator().next(); // TODO: make this more general
+        try {
+            RootCursor c = new RootCursor(mProvider.queryRoots(null));
+            c.moveToFirst();
+            mRootId = c.getDocumentId();
+            if (savedInstanceState == null) {
+                mCurrentDocumentId = mRootId;
+                addFragment();
+            } else {
+                mCurrentDocumentId = savedInstanceState.getString(PATH);
+            }
+            setTitle(c.getTitle());
+            c.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            finish();
         }
 
-        setTitle(mPath);
+
     }
 
     @Override
@@ -97,37 +107,34 @@ public class FileChooserActivity extends FragmentActivity implements
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putString(PATH, mPath);
+        outState.putString(PATH, mCurrentDocumentId);
     }
 
     @Override
     public void onBackStackChanged() {
-
         int count = mFragmentManager.getBackStackEntryCount();
         if (count > 0) {
-            BackStackEntry fragment = mFragmentManager.getBackStackEntryAt(count - 1);
-            mPath = fragment.getName();
+            FragmentManager.BackStackEntry fragment = mFragmentManager.getBackStackEntryAt(count - 1);
+            mCurrentDocumentId = fragment.getName();
         } else {
-            mPath = EXTERNAL_BASE_PATH;
+            mCurrentDocumentId = mRootId;
         }
 
-        setTitle(mPath);
-        if (HAS_ACTIONBAR)
-            invalidateOptionsMenu();
+        setTitle(mCurrentDocumentId);
+        invalidateOptionsMenu();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (HAS_ACTIONBAR) {
-            boolean hasBackStack = mFragmentManager.getBackStackEntryCount() > 0;
+        boolean hasBackStack = mFragmentManager.getBackStackEntryCount() > 0;
 
-            ActionBar actionBar = getActionBar();
-            actionBar.setDisplayHomeAsUpEnabled(hasBackStack);
-            actionBar.setHomeButtonEnabled(hasBackStack);
-        }
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(hasBackStack);
+        actionBar.setHomeButtonEnabled(hasBackStack);
 
         return true;
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -144,59 +151,45 @@ public class FileChooserActivity extends FragmentActivity implements
      * Add the initial Fragment with given path.
      */
     private void addFragment() {
-        FileListFragment fragment = FileListFragment.newInstance(mPath);
+        DocumentListFragment fragment = DocumentListFragment.newInstance(mProvider.getId(), mCurrentDocumentId);
         mFragmentManager.beginTransaction()
                 .add(android.R.id.content, fragment).commit();
     }
 
-    /**
-     * "Replace" the existing Fragment with a new one using given path. We're
-     * really adding a Fragment to the back stack.
-     *
-     * @param file The file (directory) to display.
-     */
-    private void replaceFragment(File file) {
-        mPath = file.getAbsolutePath();
-
-        FileListFragment fragment = FileListFragment.newInstance(mPath);
+    private void replaceFragment(String providerId, String documentId) {
+        mCurrentDocumentId = documentId;
+        DocumentListFragment fragment = DocumentListFragment.newInstance(providerId, documentId);
         mFragmentManager.beginTransaction()
                 .replace(android.R.id.content, fragment)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .addToBackStack(mPath).commit();
+                .addToBackStack(mCurrentDocumentId).commit();
     }
+
 
     /**
      * Finish this Activity with a result code and URI of the selected file.
      *
-     * @param file The file selected.
+     * @param document The selected document.
      */
-    private void finishWithResult(File file) {
-        if (file != null) {
-            Uri uri = Uri.fromFile(file);
-            setResult(RESULT_OK, new Intent().setData(uri));
-            finish();
-        } else {
-            setResult(RESULT_CANCELED);
-            finish();
-        }
+    private void finishWithResult(DocumentCursor document) {
+        Intent i = new Intent();
+        i.putExtra(RESULT_ID, document.getId());
+        setResult(Activity.RESULT_OK, i);
+        finish();
     }
 
-    /**
-     * Called when the user selects a File
-     *
-     * @param file The file that was selected
-     */
     @Override
-    public void onFileSelected(File file) {
-        if (file != null) {
-            if (file.isDirectory()) {
-                replaceFragment(file);
-            } else {
-                finishWithResult(file);
-            }
-        } else {
-            Toast.makeText(FileChooserActivity.this, com.mobilejazz.coltrane.library.R.string.error_selecting_file,
+    public void onDocumentSelected(DocumentCursor document) {
+        if (document.isBeforeFirst() || document.isAfterLast()) {
+            Toast.makeText(DocumentBrowserActivity.this, R.string.error_selecting_file,
                     Toast.LENGTH_SHORT).show();
+        } else {
+            if (document.isDirectory()) {
+
+                replaceFragment(mProvider.getId(), document.getId());
+            } else {
+                finishWithResult(document);
+            }
         }
     }
 
