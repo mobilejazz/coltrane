@@ -3,17 +3,25 @@ package com.mobilejazz.coltrane.library.utils;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 
-import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
+import com.mobilejazz.coltrane.library.compatibility.DocumentsContract.Root;
 
 public class RootCursor extends CursorWrapper {
 
+    private int mId;
     private int mDocumentId;
     private int mTitle;
+    private int mIcon;
 
     public RootCursor(Cursor c) {
         super(c);
-        mDocumentId = c.getColumnIndex(DocumentsContract.Root.COLUMN_DOCUMENT_ID);
-        mTitle = c.getColumnIndex(DocumentsContract.Root.COLUMN_TITLE);
+        mId = c.getColumnIndex(Root.COLUMN_ROOT_ID);
+        mDocumentId = c.getColumnIndex(Root.COLUMN_DOCUMENT_ID);
+        mTitle = c.getColumnIndex(Root.COLUMN_TITLE);
+        mIcon = c.getColumnIndex(Root.COLUMN_ICON);
+    }
+
+    public String getId() {
+        return getWrappedCursor().getString(mId);
     }
 
     public String getDocumentId() {
@@ -22,6 +30,10 @@ public class RootCursor extends CursorWrapper {
 
     public String getTitle() {
         return getWrappedCursor().getString(mTitle);
+    }
+
+    public int getIcon() {
+        return getWrappedCursor().getInt(mIcon);
     }
 
     // TODO: complete

@@ -16,7 +16,6 @@
 
 package com.mobilejazz.coltrane.ui;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -34,12 +33,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
+import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 import com.mobilejazz.coltrane.library.utils.RootCursor;
 
@@ -68,7 +67,7 @@ public class DocumentBrowserActivity extends Activity implements
         }
     };
 
-    private DocumentsProvider mProvider;
+    private Root mRoot;
     private String mCurrentDocumentId;
     private String mRootId;
 
@@ -76,8 +75,8 @@ public class DocumentBrowserActivity extends Activity implements
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
 
-    private ArrayAdapter<DocumentsProvider> mDrawerAdapter;
-    private Map<DocumentsProvider, Integer> mProviderIndices;
+    private ArrayAdapter<Root> mDrawerAdapter;
+    private Map<Root, Integer> mRootIndices;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +87,7 @@ public class DocumentBrowserActivity extends Activity implements
         // Setting up the navigation:
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
-        mDrawerAdapter = new ArrayAdapter<DocumentsProvider>(this, R.layout.provider, DocumentsProviderRegistry.get().getAll().toArray(new DocumentsProvider[] {}));
+        mDrawerAdapter = new ArrayAdapter<Root>(this, R.layout.provider, DocumentsProviderRegistry.get().getAllRoots());
 
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
 
@@ -107,7 +106,7 @@ public class DocumentBrowserActivity extends Activity implements
         mDrawerLayout.setDrawerListener(mDrawerToggle);
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
         mDrawerList.setAdapter(mDrawerAdapter);
-        populateProviderIndices();
+        populateRootIndices();
 
         getActionBar().setDisplayShowHomeEnabled(false);
         getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -116,15 +115,14 @@ public class DocumentBrowserActivity extends Activity implements
         mFragmentManager = getFragmentManager();
         mFragmentManager.addOnBackStackChangedListener(this);
 
-        final DocumentsProvider provider;
         if (savedInstanceState == null) {
-            provider = DocumentsProviderRegistry.get().getDefault();
-            replaceFragment(provider, null);
-            mDrawerList.setItemChecked(mProviderIndices.get(provider), true);
+            final Root root = DocumentsProviderRegistry.get().getDefault().getRoots().get(0);
+            replaceFragment(root, null);
+            mDrawerList.setItemChecked(mRootIndices.get(root), true);
         } else {
-            provider = DocumentsProviderRegistry.get().getProvider(savedInstanceState.getString(PROVIDER));
-            changeProvider(provider, savedInstanceState.getString(PATH));
-            mDrawerList.setItemChecked(savedInstanceState.getInt(SELECTED_ITEM), true);
+            int selected = savedInstanceState.getInt(SELECTED_ITEM);
+            mCurrentDocumentId = savedInstanceState.getString(PATH);
+            selectItem(selected);
         }
     }
 
@@ -147,7 +145,6 @@ public class DocumentBrowserActivity extends Activity implements
         super.onSaveInstanceState(outState);
 
         outState.putString(PATH, mCurrentDocumentId);
-        outState.putString(PROVIDER, mProvider.getId());
         outState.putInt(SELECTED_ITEM, mDrawerList.getSelectedItemPosition());
     }
 
@@ -204,10 +201,10 @@ public class DocumentBrowserActivity extends Activity implements
         return super.onOptionsItemSelected(item);
     }
 
-    private void populateProviderIndices() {
-        mProviderIndices = new HashMap<DocumentsProvider, Integer>();
+    private void populateRootIndices() {
+        mRootIndices = new HashMap<Root, Integer>();
         for (int pos = 0; pos < mDrawerAdapter.getCount(); ++pos) {
-            mProviderIndices.put(mDrawerAdapter.getItem(pos), pos);
+            mRootIndices.put(mDrawerAdapter.getItem(pos), pos);
         }
     }
 
@@ -224,9 +221,9 @@ public class DocumentBrowserActivity extends Activity implements
     }
 
     private void selectItem(int position) {
-        DocumentsProvider provider = (DocumentsProvider)mDrawerList.getItemAtPosition(position);
-        if (provider != mProvider) {
-            replaceFragment(provider, null);
+        Root root = (Root)mDrawerList.getItemAtPosition(position);
+        if (root != mRoot) {
+            replaceFragment(root, null);
         }
 
         // Highlight the selected item, update the title, and close the drawer
@@ -234,22 +231,20 @@ public class DocumentBrowserActivity extends Activity implements
         mDrawerLayout.closeDrawer(mDrawerList);
     }
 
-    private void changeProvider(DocumentsProvider provider, String documentId) {
-        if (provider != mProvider) {
-            RootCursor c = getRoot(provider);
-            mRootId = c.getDocumentId();
-            setTitle(c.getTitle());
-            c.close();
-            mProvider = provider;
+    private void changeProvider(Root root, String documentId) {
+        if (root != mRoot) {
+            mRootId = root.getDocumentId();
+            setTitle(root.getTitle());
+            mRoot = root;
             mCurrentDocumentId = (documentId != null) ? documentId : mRootId;
         } else if (documentId != null) {
             mCurrentDocumentId = documentId;
         }
     }
 
-    private void replaceFragment(DocumentsProvider provider, String documentId) {
-        changeProvider(provider, documentId);
-        DocumentListFragment fragment = DocumentListFragment.newInstance(provider.getId(), mCurrentDocumentId);
+    private void replaceFragment(Root root, String documentId) {
+        changeProvider(root, documentId);
+        DocumentListFragment fragment = DocumentListFragment.newInstance(root.getProvider().getId(), mCurrentDocumentId);
         mFragmentManager.beginTransaction()
                 .replace(R.id.content_frame, fragment)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
@@ -276,7 +271,7 @@ public class DocumentBrowserActivity extends Activity implements
                     Toast.LENGTH_SHORT).show();
         } else {
             if (document.isDirectory()) {
-                replaceFragment(mProvider, document.getId());
+                replaceFragment(mRoot, document.getId());
             } else {
                 finishWithResult(document);
             }

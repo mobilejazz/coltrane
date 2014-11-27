@@ -7,10 +7,13 @@ import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 
 public interface DocumentsProvider {
 
     public Cursor queryRoots(String[] projection) throws FileNotFoundException;
+
+    public List<Root> getRoots();
 
     public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException;
 

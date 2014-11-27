@@ -5,9 +5,31 @@ import android.database.Cursor;
 import android.graphics.Point;
 import android.os.CancellationSignal;
 
+import com.mobilejazz.coltrane.library.utils.RootCursor;
+
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+
+import timber.log.Timber;
 
 public abstract class AbstractDocumentsProvider implements DocumentsProvider {
+
+    @Override
+    public List<Root> getRoots() {
+        List<Root> result = new ArrayList<Root>();
+        try {
+            RootCursor c = new RootCursor(queryRoots(null));
+            c.moveToFirst();
+            while (!c.isAfterLast()) {
+                result.add(new Root(this, c.getId(), c.getDocumentId(), c.getTitle(), c.getIcon()));
+                c.moveToNext();
+            }
+        } catch (FileNotFoundException e) {
+            Timber.e(e, e.getLocalizedMessage());
+        }
+        return result;
+    }
 
     @Override
     public AssetFileDescriptor openDocumentThumbnail(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException {
