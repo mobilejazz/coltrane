@@ -38,7 +38,6 @@
         </activity>
         <activity
             android:name="com.mobilejazz.coltrane.ui.DocumentBrowserActivity"
-            android:icon="@drawable/ic_chooser"
             android:label="@string/choose_file"
             android:theme="@style/ChooserTheme" >
         </activity>
