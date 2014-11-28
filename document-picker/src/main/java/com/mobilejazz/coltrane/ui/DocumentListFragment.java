@@ -34,6 +34,8 @@ import com.mobilejazz.coltrane.library.utils.DocumentCursor;
  */
 public class DocumentListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String PROVIDER = "com.mobilejazz.coltrane.ui.browser.fragment.provider";
+
     /**
      * Interface to listen for events.
      */
@@ -64,7 +66,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
         DocumentListFragment fragment = new DocumentListFragment();
         Bundle args = new Bundle();
         args.putString(DocumentBrowserActivity.PATH, path);
-        args.putString(DocumentBrowserActivity.PROVIDER, providerId);
+        args.putString(PROVIDER, providerId);
         fragment.setArguments(args);
 
         return fragment;
@@ -87,7 +89,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
         super.onCreate(savedInstanceState);
 
         mAdapter = new DocumentListAdapter(getActivity(), null);
-        String providerId = getArguments().getString(DocumentBrowserActivity.PROVIDER);
+        String providerId = getArguments().getString(PROVIDER);
         mProvider = DocumentsProviderRegistry.get().getProvider(providerId);
         mCurrentDocumentId = getArguments().getString(DocumentBrowserActivity.PATH);
     }

@@ -52,7 +52,6 @@ import java.util.Map;
 public class DocumentBrowserActivity extends Activity implements
         FragmentManager.OnBackStackChangedListener, DocumentListFragment.Callbacks {
 
-    public static final String PROVIDER = "com.mobilejazz.coltrane.ui.browser.provider";
     public static final String PATH = "com.mobilejazz.coltrane.ui.browser.path";
     public static final String SELECTED_ITEM = "com.mobilejazz.coltrane.ui.browser.selected";
 
@@ -87,7 +86,7 @@ public class DocumentBrowserActivity extends Activity implements
         // Setting up the navigation:
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
-        mDrawerAdapter = new ArrayAdapter<Root>(this, R.layout.provider, DocumentsProviderRegistry.get().getAllRoots());
+        mDrawerAdapter = new RootAdapter(this, R.layout.root, DocumentsProviderRegistry.get().getAllRoots());
 
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
 

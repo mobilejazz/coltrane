@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- the theme applied to the application or activity -->
+    <style name="Theme.Lollipop"
+        parent="@android:style/Theme.Holo.Light.DarkActionBar">
+        <item name="android:actionBarStyle">@style/ActionBar.Lollipop</item>
+        <item name="android:textColorPrimary">@color/native.lollipop.text.normal</item>
+        <item name="android:textColorHighlight">@drawable/native_lollipop_text</item>
+        <item name="android:activatedBackgroundIndicator">@drawable/native_lollipop_background</item>
+    </style>
+
+    <!-- ActionBar styles -->
+    <style name="ActionBar.Lollipop" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">@color/native.lollipop.actionbar.background</item>
+    </style>
+</resources>
