@@ -6,6 +6,7 @@
         <item name="android:actionBarStyle">@style/ActionBar.Lollipop</item>
         <item name="android:textColorPrimary">@color/native.lollipop.text.normal</item>
         <item name="android:textColorHighlight">@drawable/native_lollipop_text</item>
+        <item name="android:textColorHighlightInverse">@color/native.lollipop.text.selected</item>
         <item name="android:activatedBackgroundIndicator">@drawable/native_lollipop_background</item>
     </style>
 

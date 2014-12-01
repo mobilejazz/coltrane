@@ -9,4 +9,14 @@
         <item name="android:background">?android:attr/activatedBackgroundIndicator</item>
         <item name="android:textColor">?android:attr/textColorHighlight</item>
     </style>
+
+    <style name="TopNavigationEntry">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">?android:attr/textColorHighlightInverse</item>
+    </style>
+
+    <style name="TopNavigationEntryDropdown" parent="TopNavigationEntry">
+        <item name="android:padding">15dp</item>
+    </style>
 </resources>

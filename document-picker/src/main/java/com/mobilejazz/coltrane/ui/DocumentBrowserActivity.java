@@ -16,6 +16,7 @@
 
 package com.mobilejazz.coltrane.ui;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -46,6 +47,8 @@ import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
+import timber.log.Timber;
+
 /**
  * Main Activity that handles the FileListFragments
  */
@@ -66,6 +69,13 @@ public class DocumentBrowserActivity extends Activity implements
         }
     };
 
+    private ActionBar.OnNavigationListener mNavigationListener = new ActionBar.OnNavigationListener() {
+        @Override
+        public boolean onNavigationItemSelected(int itemPosition, long itemId) {
+            return false;
+        }
+    };
+
     private Root mRoot;
     private String mCurrentDocumentId;
     private String mRootId;
@@ -75,6 +85,7 @@ public class DocumentBrowserActivity extends Activity implements
     private ListView mDrawerList;
 
     private ArrayAdapter<Root> mDrawerAdapter;
+    private BackStackAdapter mNavigationAdapter;
     private Map<Root, Integer> mRootIndices;
 
     @Override
@@ -110,6 +121,11 @@ public class DocumentBrowserActivity extends Activity implements
         getActionBar().setDisplayShowHomeEnabled(false);
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setHomeButtonEnabled(true);
+
+        mNavigationAdapter = new BackStackAdapter(this, getFragmentManager(), R.layout.navigation_item, R.layout.navigation_item_dropdown);
+        getActionBar().setDisplayShowTitleEnabled(false);
+        getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+        getActionBar().setListNavigationCallbacks(mNavigationAdapter, mNavigationListener);
 
         mFragmentManager = getFragmentManager();
         mFragmentManager.addOnBackStackChangedListener(this);
@@ -149,9 +165,9 @@ public class DocumentBrowserActivity extends Activity implements
 
     @Override
     public void onBackStackChanged() {
-        int count = mFragmentManager.getBackStackEntryCount();
-        if (count > 0) {
-            FragmentManager.BackStackEntry fragment = mFragmentManager.getBackStackEntryAt(count - 1);
+        int newDepth = mFragmentManager.getBackStackEntryCount();
+        if (newDepth > 0) {
+            FragmentManager.BackStackEntry fragment = mFragmentManager.getBackStackEntryAt(newDepth - 1);
             mCurrentDocumentId = fragment.getName();
         } else {
             mCurrentDocumentId = mRootId;
@@ -242,12 +258,28 @@ public class DocumentBrowserActivity extends Activity implements
     }
 
     private void replaceFragment(Root root, String documentId) {
-        changeProvider(root, documentId);
-        DocumentListFragment fragment = DocumentListFragment.newInstance(root.getProvider().getId(), mCurrentDocumentId);
-        mFragmentManager.beginTransaction()
-                .replace(R.id.content_frame, fragment)
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .addToBackStack(mCurrentDocumentId).commit();
+        try {
+            changeProvider(root, documentId);
+            DocumentListFragment fragment = DocumentListFragment.newInstance(root.getProvider().getId(), mCurrentDocumentId);
+
+            DocumentCursor c = new DocumentCursor(mRoot.getProvider().queryDocument(mCurrentDocumentId, null));
+            c.moveToFirst();
+
+            FragmentTransaction t = mFragmentManager.beginTransaction()
+                    .replace(R.id.content_frame, fragment)
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+
+            if (mCurrentDocumentId == mRootId) {
+                t.addToBackStack(mRoot.getTitle());
+            } else {
+                t.addToBackStack(c.getName());
+            }
+            t.commit();
+
+            c.close();
+        } catch (FileNotFoundException e) {
+            Timber.e(e, e.getLocalizedMessage());
+        }
     }
 
 
