@@ -173,7 +173,7 @@ public class DocumentBrowserActivity extends Activity implements
             mCurrentDocumentId = mRootId;
         }
 
-        setTitle(mCurrentDocumentId);
+        getActionBar().setSelectedNavigationItem(newDepth - 1);
         invalidateOptionsMenu();
     }
 
