@@ -72,7 +72,8 @@ public class DocumentBrowserActivity extends Activity implements
     private ActionBar.OnNavigationListener mNavigationListener = new ActionBar.OnNavigationListener() {
         @Override
         public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-            return false;
+            mFragmentManager.popBackStack((int)itemId, 0);
+            return true;
         }
     };
 
