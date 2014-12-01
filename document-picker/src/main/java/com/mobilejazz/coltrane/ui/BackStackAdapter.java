@@ -46,23 +46,35 @@ public class BackStackAdapter extends BaseAdapter implements FragmentManager.OnB
             convertView = mLayoutInflater.inflate(layout, parent, false);
         }
 
-        bindView(mContext, convertView, mFragmentManager.getBackStackEntryAt(position));
-
         return convertView;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        return getView(position, convertView, parent, mLayoutResId);
+        View v = getView(position, convertView, parent, mLayoutResId);
+        bindView(mContext, position, v, mFragmentManager.getBackStackEntryAt(position));
+        return v;
     }
 
     @Override
     public View getDropDownView(int position, View convertView, ViewGroup parent) {
-        return getView(position, convertView, parent, mDropdownLayoutResId);
+        View v = getView(position, convertView, parent, mDropdownLayoutResId);
+        bindDropDownView(mContext, position, v, mFragmentManager.getBackStackEntryAt(position));
+        return v;
     }
 
-    protected void bindView(Context context, View view, FragmentManager.BackStackEntry e) {
+    protected void bindView(Context context, int position, View view, FragmentManager.BackStackEntry e) {
         TextView tv = (TextView)view;
+        tv.setText(e.getName());
+    }
+
+    protected void bindDropDownView(Context context, int position, View view, FragmentManager.BackStackEntry e) {
+        TextView tv = (TextView)view;
+        if (position > 0) {
+            tv.setCompoundDrawablesWithIntrinsicBounds(R.drawable.level_down, 0, 0, 0);
+        } else {
+            tv.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+        }
         tv.setText(e.getName());
     }
 
