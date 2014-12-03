@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="native.lollipop.actionbar.background">#37474f</color>
+    <color name="native.lollipop.actionbar.dropdown.background">#303030</color>
+    <!--<color name="native.lollipop.primary.dark">#263238</color>-->
+    <color name="native.lollipop.background.normal">#fff</color>
+    <color name="native.lollipop.background.pressed">#c3c3c3</color>
+    <color name="native.lollipop.background.activated">#009688</color>
+    <color name="native.lollipop.text.normal">#212121</color>
+    <color name="native.lollipop.text.selected">#ffffff</color>
+
+
+</resources>

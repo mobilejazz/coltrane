@@ -24,18 +24,31 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
-import android.view.Menu;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
+import com.mobilejazz.coltrane.library.Root;
+import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 import com.mobilejazz.coltrane.library.utils.RootCursor;
 
 import java.io.FileNotFoundException;
+import java.util.HashMap;
+import java.util.Map;
+
+import timber.log.Timber;
 
 /**
  * Main Activity that handles the FileListFragments
@@ -43,8 +56,8 @@ import java.io.FileNotFoundException;
 public class DocumentBrowserActivity extends Activity implements
         FragmentManager.OnBackStackChangedListener, DocumentListFragment.Callbacks {
 
-    public static final String PROVIDER = "provider";
-    public static final String PATH = "path";
+    public static final String PATH = "com.mobilejazz.coltrane.ui.browser.path";
+    public static final String SELECTED_ITEM = "com.mobilejazz.coltrane.ui.browser.selected";
 
     public static final String RESULT_ID = DocumentsContract.Document.COLUMN_DOCUMENT_ID;
 
@@ -57,36 +70,88 @@ public class DocumentBrowserActivity extends Activity implements
         }
     };
 
-    private DocumentsProvider mProvider;
+    private AdapterView.OnItemSelectedListener mNavigationListener = new AdapterView.OnItemSelectedListener() {
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            if (id >= 0) {
+                mFragmentManager.popBackStack((int) id, 0);
+            } else {
+                // pop all:
+                mFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+
+        }
+
+    };
+
+    private Root mRoot;
     private String mCurrentDocumentId;
     private String mRootId;
+
+    private Toolbar mToolbar;
+
+    private ActionBarDrawerToggle mDrawerToggle;
+    private DrawerLayout mDrawerLayout;
+    private ListView mDrawerList;
+    private Spinner mNavigationDropDown;
+
+    private ArrayAdapter<Root> mDrawerAdapter;
+    private BackStackAdapter mNavigationAdapter;
+    private Map<Root, Integer> mRootIndices;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setContentView(R.layout.picker);
+
+        // Setting up the navigation:
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+        mDrawerAdapter = new RootAdapter(this, R.layout.root, DocumentsProviderRegistry.get().getAllRoots());
+
+        mToolbar = (Toolbar)findViewById(R.id.toolbar);
+        getActionBar().hide();
+
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close) {
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+            }
+
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+            }
+        };
+
+        // Set the drawer toggle as the DrawerListener
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+        mDrawerList.setAdapter(mDrawerAdapter);
+        populateRootIndices();
+
+        mNavigationAdapter = new BackStackAdapter(this, getFragmentManager(), R.layout.navigation_item, R.layout.navigation_item_dropdown);
+        mNavigationDropDown = (Spinner)findViewById(R.id.navigation_dropdown);
+        mNavigationDropDown.setOnItemSelectedListener(mNavigationListener);
+        mNavigationDropDown.setAdapter(mNavigationAdapter);
+
         mFragmentManager = getFragmentManager();
         mFragmentManager.addOnBackStackChangedListener(this);
 
-        mProvider = DocumentsProviderRegistry.get().getAll().iterator().next(); // TODO: make this more general
-        try {
-            RootCursor c = new RootCursor(mProvider.queryRoots(null));
-            c.moveToFirst();
-            mRootId = c.getDocumentId();
-            if (savedInstanceState == null) {
-                mCurrentDocumentId = mRootId;
-                addFragment();
-            } else {
-                mCurrentDocumentId = savedInstanceState.getString(PATH);
-            }
-            setTitle(c.getTitle());
-            c.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            finish();
+        if (savedInstanceState == null) {
+            selectItem(0);
+        } else {
+            int selected = savedInstanceState.getInt(SELECTED_ITEM);
+            mCurrentDocumentId = savedInstanceState.getString(PATH);
+            selectItem(selected);
         }
-
-
     }
 
     @Override
@@ -108,36 +173,42 @@ public class DocumentBrowserActivity extends Activity implements
         super.onSaveInstanceState(outState);
 
         outState.putString(PATH, mCurrentDocumentId);
+        outState.putInt(SELECTED_ITEM, mDrawerList.getSelectedItemPosition());
     }
 
     @Override
     public void onBackStackChanged() {
-        int count = mFragmentManager.getBackStackEntryCount();
-        if (count > 0) {
-            FragmentManager.BackStackEntry fragment = mFragmentManager.getBackStackEntryAt(count - 1);
+        int newDepth = mFragmentManager.getBackStackEntryCount();
+        if (newDepth > 0) {
+            FragmentManager.BackStackEntry fragment = mFragmentManager.getBackStackEntryAt(newDepth - 1);
             mCurrentDocumentId = fragment.getName();
         } else {
             mCurrentDocumentId = mRootId;
         }
+        mNavigationDropDown.setSelection(newDepth);
 
-        setTitle(mCurrentDocumentId);
         invalidateOptionsMenu();
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        boolean hasBackStack = mFragmentManager.getBackStackEntryCount() > 0;
-
-        ActionBar actionBar = getActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(hasBackStack);
-        actionBar.setHomeButtonEnabled(hasBackStack);
-
-        return true;
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mDrawerToggle.syncState();
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
         switch (item.getItemId()) {
             case android.R.id.home:
                 mFragmentManager.popBackStack();
@@ -147,22 +218,68 @@ public class DocumentBrowserActivity extends Activity implements
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Add the initial Fragment with given path.
-     */
-    private void addFragment() {
-        DocumentListFragment fragment = DocumentListFragment.newInstance(mProvider.getId(), mCurrentDocumentId);
-        mFragmentManager.beginTransaction()
-                .add(android.R.id.content, fragment).commit();
+    private void populateRootIndices() {
+        mRootIndices = new HashMap<Root, Integer>();
+        for (int pos = 0; pos < mDrawerAdapter.getCount(); ++pos) {
+            mRootIndices.put(mDrawerAdapter.getItem(pos), pos);
+        }
     }
 
-    private void replaceFragment(String providerId, String documentId) {
-        mCurrentDocumentId = documentId;
-        DocumentListFragment fragment = DocumentListFragment.newInstance(providerId, documentId);
-        mFragmentManager.beginTransaction()
-                .replace(android.R.id.content, fragment)
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .addToBackStack(mCurrentDocumentId).commit();
+    private RootCursor getRoot(DocumentsProvider provider) {
+        try {
+            RootCursor c = new RootCursor(provider.queryRoots(null));
+            c.moveToFirst();
+            return c;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            finish();
+            return null;
+        }
+    }
+
+    private void selectItem(int position) {
+        Root root = (Root)mDrawerList.getItemAtPosition(position);
+        if (root != mRoot) {
+            replaceFragment(root, null);
+        }
+
+        // Highlight the selected item, update the title, and close the drawer
+        mDrawerList.setItemChecked(position, true);
+        mDrawerLayout.closeDrawers();
+    }
+
+    private void changeProvider(Root root, String documentId) {
+        if (root != mRoot) {
+            mRootId = root.getDocumentId();
+            mNavigationAdapter.setHeader(root.getTitle());
+            mRoot = root;
+            mCurrentDocumentId = (documentId != null) ? documentId : mRootId;
+        } else if (documentId != null) {
+            mCurrentDocumentId = documentId;
+        }
+    }
+
+    private void replaceFragment(Root root, String documentId) {
+        try {
+            changeProvider(root, documentId);
+            DocumentListFragment fragment = DocumentListFragment.newInstance(root.getProvider().getId(), mCurrentDocumentId);
+
+            DocumentCursor c = new DocumentCursor(mRoot.getProvider().queryDocument(mCurrentDocumentId, null));
+            c.moveToFirst();
+
+            FragmentTransaction t = mFragmentManager.beginTransaction()
+                    .replace(R.id.content_frame, fragment)
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+
+            if (!mCurrentDocumentId.equals(mRootId)) {
+                t.addToBackStack(c.getName());
+            }
+            t.commit();
+
+            c.close();
+        } catch (FileNotFoundException e) {
+            Timber.e(e, e.getLocalizedMessage());
+        }
     }
 
 
@@ -173,7 +290,7 @@ public class DocumentBrowserActivity extends Activity implements
      */
     private void finishWithResult(DocumentCursor document) {
         Intent i = new Intent();
-        i.putExtra(RESULT_ID, document.getId());
+        i.setData(DocumentsContract.buildDocumentUri(mRoot.getProvider().getId(), document.getId()));
         setResult(Activity.RESULT_OK, i);
         finish();
     }
@@ -185,8 +302,7 @@ public class DocumentBrowserActivity extends Activity implements
                     Toast.LENGTH_SHORT).show();
         } else {
             if (document.isDirectory()) {
-
-                replaceFragment(mProvider.getId(), document.getId());
+                replaceFragment(mRoot, document.getId());
             } else {
                 finishWithResult(document);
             }
@@ -208,4 +324,12 @@ public class DocumentBrowserActivity extends Activity implements
     private void unregisterStorageListener() {
         unregisterReceiver(mStorageListener);
     }
+
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView parent, View view, int position, long id) {
+            selectItem(position);
+        }
+    }
+
 }

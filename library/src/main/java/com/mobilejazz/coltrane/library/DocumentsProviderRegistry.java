@@ -16,16 +16,19 @@
 
 package com.mobilejazz.coltrane.library;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class DocumentsProviderRegistry {
 
     private Map<String, DocumentsProvider> mProviders;
 
     public DocumentsProviderRegistry() {
-        mProviders = new HashMap<>();
+        mProviders = new HashMap<String, DocumentsProvider>();
     }
 
     public DocumentsProvider getProvider(String id) {
@@ -38,6 +41,14 @@ public class DocumentsProviderRegistry {
 
     public Collection<DocumentsProvider> getAll() {
         return mProviders.values();
+    }
+
+    public List<Root> getAllRoots() {
+        List<Root> result = new ArrayList<Root>();
+        for (DocumentsProvider p : getAll()) {
+            result.addAll(p.getRoots());
+        }
+        return result;
     }
 
     private static DocumentsProviderRegistry instance;

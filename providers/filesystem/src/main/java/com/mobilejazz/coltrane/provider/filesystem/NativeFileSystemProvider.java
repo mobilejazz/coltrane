@@ -1,11 +1,11 @@
 package com.mobilejazz.coltrane.provider.filesystem;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
-import com.mobilejazz.coltrane.library.DocumentsProviderAdapter;
+import com.mobilejazz.coltrane.library.NativeDocumentsProvider;
 
-public class FileSystemAdapter extends DocumentsProviderAdapter {
+public class NativeFileSystemProvider extends NativeDocumentsProvider {
 
-    public static final String AUTHORITY = "com.mobilejazz.coltrane.provider.filesystem";
+    public static final String AUTHORITY = "com.mobilejazz.coltrane.provider.filesystem.documents";
 
     private FileSystemProvider delegate;
 
