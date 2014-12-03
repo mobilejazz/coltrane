@@ -19,6 +19,7 @@ package com.mobilejazz.coltrane.example;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
@@ -102,10 +103,10 @@ public class FileChooserExampleActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     if (data != null) {
                         // Get the URI of the selected file
-                        String documentId = data.getStringExtra(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
+                        Uri documentUri = data.getData();
                         try {
                             Toast.makeText(FileChooserExampleActivity.this,
-                                    "File Selected: " + documentId, Toast.LENGTH_LONG).show();
+                                    "File Selected: " + documentUri, Toast.LENGTH_LONG).show();
                         } catch (Exception e) {
                             Log.e("FileSelectorTestActivity", "File select error", e);
                         }

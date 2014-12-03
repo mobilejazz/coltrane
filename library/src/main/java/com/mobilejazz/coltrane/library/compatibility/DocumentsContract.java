@@ -18,13 +18,36 @@ package com.mobilejazz.coltrane.library.compatibility;
 
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.Point;
+import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.CancellationSignal;
+import android.os.OperationCanceledException;
 import android.os.ParcelFileDescriptor;
 import android.os.ParcelFileDescriptor.OnCloseListener;
+import android.os.RemoteException;
+import android.system.ErrnoException;
+import android.system.Os;
+import android.util.Log;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
+
+import static android.system.OsConstants.SEEK_SET;
 
 public final class DocumentsContract {
     private static final String TAG = "Documents";
@@ -382,6 +405,281 @@ public final class DocumentsContract {
          * @hide
          */
         public static final int FLAG_ADVANCED = 1 << 17;
+    }
+
+    /**
+     * Optional boolean flag included in a directory {@link Cursor#getExtras()}
+     * indicating that a document provider is still loading data. For example, a
+     * provider has returned some results, but is still waiting on an
+     * outstanding network request. The provider must send a content changed
+     * notification when loading is finished.
+     *
+     * @see ContentResolver#notifyChange(Uri, android.database.ContentObserver,
+     *      boolean)
+     */
+    public static final String EXTRA_LOADING = "loading";
+
+    /**
+     * Optional string included in a directory {@link Cursor#getExtras()}
+     * providing an informational message that should be shown to a user. For
+     * example, a provider may wish to indicate that not all documents are
+     * available.
+     */
+    public static final String EXTRA_INFO = "info";
+
+    /**
+     * Optional string included in a directory {@link Cursor#getExtras()}
+     * providing an error message that should be shown to a user. For example, a
+     * provider may wish to indicate that a network error occurred. The user may
+     * choose to retry, resulting in a new query.
+     */
+    public static final String EXTRA_ERROR = "error";
+
+    /** {@hide} */
+    public static final String METHOD_CREATE_DOCUMENT = "android:createDocument";
+    /** {@hide} */
+    public static final String METHOD_RENAME_DOCUMENT = "android:renameDocument";
+    /** {@hide} */
+    public static final String METHOD_DELETE_DOCUMENT = "android:deleteDocument";
+
+    /** {@hide} */
+    public static final String EXTRA_URI = "uri";
+
+    private static final String PATH_ROOT = "root";
+    private static final String PATH_RECENT = "recent";
+    private static final String PATH_DOCUMENT = "document";
+    private static final String PATH_CHILDREN = "children";
+    private static final String PATH_SEARCH = "search";
+    private static final String PATH_TREE = "tree";
+
+    private static final String PARAM_QUERY = "query";
+    private static final String PARAM_MANAGE = "manage";
+
+    /**
+     * Build URI representing the roots of a document provider. When queried, a
+     * provider will return one or more rows with columns defined by
+     * {@link Root}.
+     *
+     * @see android.provider.DocumentsProvider#queryRoots(String[])
+     */
+    public static Uri buildRootsUri(String authority) {
+        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
+                .authority(authority).appendPath(PATH_ROOT).build();
+    }
+
+    /**
+     * Build URI representing the given {@link Root#COLUMN_ROOT_ID} in a
+     * document provider.
+     *
+     * @see #getRootId(Uri)
+     */
+    public static Uri buildRootUri(String authority, String rootId) {
+        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
+                .authority(authority).appendPath(PATH_ROOT).appendPath(rootId).build();
+    }
+
+    /**
+     * Build URI representing the recently modified documents of a specific root
+     * in a document provider. When queried, a provider will return zero or more
+     * rows with columns defined by {@link Document}.
+     *
+     * @see android.provider.DocumentsProvider#queryRecentDocuments(String, String[])
+     * @see #getRootId(Uri)
+     */
+    public static Uri buildRecentDocumentsUri(String authority, String rootId) {
+        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
+                .authority(authority).appendPath(PATH_ROOT).appendPath(rootId)
+                .appendPath(PATH_RECENT).build();
+    }
+
+    /**
+     * Build URI representing access to descendant documents of the given
+     * {@link Document#COLUMN_DOCUMENT_ID}.
+     *
+     * @see #getTreeDocumentId(Uri)
+     */
+    public static Uri buildTreeDocumentUri(String authority, String documentId) {
+        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority)
+                .appendPath(PATH_TREE).appendPath(documentId).build();
+    }
+
+    /**
+     * Build URI representing the target {@link Document#COLUMN_DOCUMENT_ID} in
+     * a document provider. When queried, a provider will return a single row
+     * with columns defined by {@link Document}.
+     *
+     * @see android.provider.DocumentsProvider#queryDocument(String, String[])
+     * @see #getDocumentId(Uri)
+     */
+    public static Uri buildDocumentUri(String authority, String documentId) {
+        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
+                .authority(authority).appendPath(PATH_DOCUMENT).appendPath(documentId).build();
+    }
+
+    /**
+     * Build URI representing the target {@link Document#COLUMN_DOCUMENT_ID} in
+     * a document provider. When queried, a provider will return a single row
+     * with columns defined by {@link Document}.
+     * <p>
+     * However, instead of directly accessing the target document, the returned
+     * URI will leverage access granted through a subtree URI, typically
+     * returned by {@link Intent#ACTION_OPEN_DOCUMENT_TREE}. The target document
+     * must be a descendant (child, grandchild, etc) of the subtree.
+     * <p>
+     * This is typically used to access documents under a user-selected
+     * directory tree, since it doesn't require the user to separately confirm
+     * each new document access.
+     *
+     * @param treeUri the subtree to leverage to gain access to the target
+     *            document. The target directory must be a descendant of this
+     *            subtree.
+     * @param documentId the target document, which the caller may not have
+     *            direct access to.
+     * @see Intent#ACTION_OPEN_DOCUMENT_TREE
+     * @see android.provider.DocumentsProvider#isChildDocument(String, String)
+     * @see #buildDocumentUri(String, String)
+     */
+    public static Uri buildDocumentUriUsingTree(Uri treeUri, String documentId) {
+        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
+                .authority(treeUri.getAuthority()).appendPath(PATH_TREE)
+                .appendPath(getTreeDocumentId(treeUri)).appendPath(PATH_DOCUMENT)
+                .appendPath(documentId).build();
+    }
+
+    /** {@hide} */
+    public static Uri buildDocumentUriMaybeUsingTree(Uri baseUri, String documentId) {
+        if (isTreeUri(baseUri)) {
+            return buildDocumentUriUsingTree(baseUri, documentId);
+        } else {
+            return buildDocumentUri(baseUri.getAuthority(), documentId);
+        }
+    }
+
+    /**
+     * Build URI representing the children of the target directory in a document
+     * provider. When queried, a provider will return zero or more rows with
+     * columns defined by {@link Document}.
+     *
+     * @param parentDocumentId the document to return children for, which must
+     *            be a directory with MIME type of
+     *            {@link Document#MIME_TYPE_DIR}.
+     * @see android.provider.DocumentsProvider#queryChildDocuments(String, String[], String)
+     * @see #getDocumentId(Uri)
+     */
+    public static Uri buildChildDocumentsUri(String authority, String parentDocumentId) {
+        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority)
+                .appendPath(PATH_DOCUMENT).appendPath(parentDocumentId).appendPath(PATH_CHILDREN)
+                .build();
+    }
+
+    /**
+     * Build URI representing the children of the target directory in a document
+     * provider. When queried, a provider will return zero or more rows with
+     * columns defined by {@link Document}.
+     * <p>
+     * However, instead of directly accessing the target directory, the returned
+     * URI will leverage access granted through a subtree URI, typically
+     * returned by {@link Intent#ACTION_OPEN_DOCUMENT_TREE}. The target
+     * directory must be a descendant (child, grandchild, etc) of the subtree.
+     * <p>
+     * This is typically used to access documents under a user-selected
+     * directory tree, since it doesn't require the user to separately confirm
+     * each new document access.
+     *
+     * @param treeUri the subtree to leverage to gain access to the target
+     *            document. The target directory must be a descendant of this
+     *            subtree.
+     * @param parentDocumentId the document to return children for, which the
+     *            caller may not have direct access to, and which must be a
+     *            directory with MIME type of {@link Document#MIME_TYPE_DIR}.
+     * @see Intent#ACTION_OPEN_DOCUMENT_TREE
+     * @see android.provider.DocumentsProvider#isChildDocument(String, String)
+     * @see #buildChildDocumentsUri(String, String)
+     */
+    public static Uri buildChildDocumentsUriUsingTree(Uri treeUri, String parentDocumentId) {
+        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
+                .authority(treeUri.getAuthority()).appendPath(PATH_TREE)
+                .appendPath(getTreeDocumentId(treeUri)).appendPath(PATH_DOCUMENT)
+                .appendPath(parentDocumentId).appendPath(PATH_CHILDREN).build();
+    }
+
+    /**
+     * Build URI representing a search for matching documents under a specific
+     * root in a document provider. When queried, a provider will return zero or
+     * more rows with columns defined by {@link Document}.
+     *
+     * @see android.provider.DocumentsProvider#querySearchDocuments(String, String, String[])
+     * @see #getRootId(Uri)
+     * @see #getSearchDocumentsQuery(Uri)
+     */
+    public static Uri buildSearchDocumentsUri(
+            String authority, String rootId, String query) {
+        return new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(authority)
+                .appendPath(PATH_ROOT).appendPath(rootId).appendPath(PATH_SEARCH)
+                .appendQueryParameter(PARAM_QUERY, query).build();
+    }
+
+    /** {@hide} */
+    public static boolean isTreeUri(Uri uri) {
+        final List<String> paths = uri.getPathSegments();
+        return (paths.size() >= 2 && PATH_TREE.equals(paths.get(0)));
+    }
+
+    /**
+     * Extract the {@link Root#COLUMN_ROOT_ID} from the given URI.
+     */
+    public static String getRootId(Uri rootUri) {
+        final List<String> paths = rootUri.getPathSegments();
+        if (paths.size() >= 2 && PATH_ROOT.equals(paths.get(0))) {
+            return paths.get(1);
+        }
+        throw new IllegalArgumentException("Invalid URI: " + rootUri);
+    }
+
+    /**
+     * Extract the {@link Document#COLUMN_DOCUMENT_ID} from the given URI.
+     *
+     * @see #isDocumentUri(Context, Uri)
+     */
+    public static String getDocumentId(Uri documentUri) {
+        final List<String> paths = documentUri.getPathSegments();
+        if (paths.size() >= 2 && PATH_DOCUMENT.equals(paths.get(0))) {
+            return paths.get(1);
+        }
+        if (paths.size() >= 4 && PATH_TREE.equals(paths.get(0))
+                && PATH_DOCUMENT.equals(paths.get(2))) {
+            return paths.get(3);
+        }
+        throw new IllegalArgumentException("Invalid URI: " + documentUri);
+    }
+
+    /**
+     * Extract the via {@link Document#COLUMN_DOCUMENT_ID} from the given URI.
+     */
+    public static String getTreeDocumentId(Uri documentUri) {
+        final List<String> paths = documentUri.getPathSegments();
+        if (paths.size() >= 2 && PATH_TREE.equals(paths.get(0))) {
+            return paths.get(1);
+        }
+        throw new IllegalArgumentException("Invalid URI: " + documentUri);
+    }
+
+    /**
+     * Extract the search query from a URI built by
+     * {@link #buildSearchDocumentsUri(String, String, String)}.
+     */
+    public static String getSearchDocumentsQuery(Uri searchDocumentsUri) {
+        return searchDocumentsUri.getQueryParameter(PARAM_QUERY);
+    }
+
+    /** {@hide} */
+    public static Uri setManageMode(Uri uri) {
+        return uri.buildUpon().appendQueryParameter(PARAM_MANAGE, "true").build();
+    }
+
+    /** {@hide} */
+    public static boolean isManageMode(Uri uri) {
+        return uri.getBooleanQueryParameter(PARAM_MANAGE, false);
     }
 
 }

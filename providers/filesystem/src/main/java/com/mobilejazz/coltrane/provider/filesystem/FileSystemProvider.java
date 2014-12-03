@@ -11,7 +11,7 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.webkit.MimeTypeMap;
 
-import com.mobilejazz.coltrane.library.AbstractDocumentsProvider;
+import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 import com.mobilejazz.coltrane.library.compatibility.MatrixCursor;
@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import timber.log.Timber;
 
-public class FileSystemProvider extends AbstractDocumentsProvider {
+public class FileSystemProvider extends DocumentsProvider {
 
     private final static String _ID = "_id";
 
