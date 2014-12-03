@@ -16,51 +16,82 @@
 
 package com.mobilejazz.coltrane.example;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.mobilejazz.coltrane.ui.DocumentBrowserActivity;
 
 public class FileChooserExampleActivity extends Activity {
 
-    private static final String TAG = "FileChooserExampleActivity";
-
-    private static final int REQUEST_CODE = 6384; // onActivityResult request
-                                                  // code
+    private static final int REQUEST_CODE = 6384; // onActivityResult request code
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Create a simple button to start the file chooser process
-        Button button = new Button(this);
-        button.setText(com.mobilejazz.coltrane.example.R.string.choose_file);
-        button.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Display the file chooser dialog
-                showChooser();
-            }
-        });
-
-        setContentView(button);
+        setContentView(R.layout.example);
     }
 
-    private void showChooser() {
-//        // Use the GET_CONTENT intent from the utility class
-//        Intent target = FileUtils.createGetContentIntent();
-//        // Create the chooser Intent
-//        Intent intent = Intent.createChooser(target, getString(com.mobilejazz.coltrane.example.R.string.chooser_title));
-
+    private void openCustomUI() {
         Intent selectFile = new Intent(this, DocumentBrowserActivity.class);
         startActivityForResult(selectFile, REQUEST_CODE);
+    }
+
+    public void openCustomUI(View view) {
+        openCustomUI();
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private void openSafUI() {
+        // supports SAF natively:
+        // ACTION_OPEN_DOCUMENT is the intent to choose a file via the system's file
+        // browser.
+        Intent selectFile = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+
+        // Filter to only show results that can be "opened", such as a
+        // file (as opposed to a list of contacts or timezones)
+        selectFile.addCategory(Intent.CATEGORY_OPENABLE);
+
+        // Filter to show only images, using the image MIME data type.
+        // If one wanted to search for ogg vorbis files, the type would be "audio/ogg".
+        // To search for all documents available via installed storage providers,
+        // it would be "*/*".
+        selectFile.setType("*/*");
+        startActivityForResult(selectFile, REQUEST_CODE);
+    }
+
+    public void openSafWithFallback(View view) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            openSafUI();
+        } else {
+            // Fallback to custom UI:
+            openCustomUI();
+        }
+    }
+
+    private void openWithSelector() {
+        final Intent selectFile = new Intent(Intent.ACTION_GET_CONTENT);
+        // The MIME data type filter
+        selectFile.setType("*/*");
+        // Only return URIs that can be opened with ContentResolver
+        selectFile.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(selectFile, REQUEST_CODE);
+    }
+
+    public void openNativeUI(View view) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            openSafUI();
+        } else {
+            // Fallback to custom UI:
+            openWithSelector();
+        }
     }
 
     @Override

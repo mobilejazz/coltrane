@@ -17,4 +17,8 @@
 <resources>
     <string name="app_name" translatable="false">Coltrane Example Application</string>
     <string name="chooser_title" translatable="false">Lorem ipsum</string>
+
+    <string name="custom_ui">Custom UI</string>
+    <string name="saf_with_fallback">Storage Access Framework with fallback</string>
+    <string name="native_ui">Native UI</string>
 </resources>
