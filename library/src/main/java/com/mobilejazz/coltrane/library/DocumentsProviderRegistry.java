@@ -26,7 +26,6 @@ import java.util.NoSuchElementException;
 public class DocumentsProviderRegistry {
 
     private Map<String, DocumentsProvider> mProviders;
-    private DocumentsProvider mDefaultProvider;
 
     public DocumentsProviderRegistry() {
         mProviders = new HashMap<String, DocumentsProvider>();
@@ -50,25 +49,6 @@ public class DocumentsProviderRegistry {
             result.addAll(p.getRoots());
         }
         return result;
-    }
-
-    public void registerAsDefault(String id, DocumentsProvider provider) {
-        if (mDefaultProvider == null) {
-            register(id, provider);
-            mDefaultProvider = provider;
-        } else {
-            throw new IllegalStateException("Could not register " + provider.getId() + ". There is already a provider registered: " + mDefaultProvider.getId());
-        }
-    }
-
-    public DocumentsProvider getDefault() {
-        if (mDefaultProvider != null) {
-            return mDefaultProvider;
-        } else if (mProviders.size() > 0) {
-            return mProviders.values().iterator().next();
-        } else {
-            throw new NoSuchElementException("No provider registered.");
-        }
     }
 
     private static DocumentsProviderRegistry instance;

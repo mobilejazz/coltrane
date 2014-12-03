@@ -72,7 +72,12 @@ public class DocumentBrowserActivity extends Activity implements
     private ActionBar.OnNavigationListener mNavigationListener = new ActionBar.OnNavigationListener() {
         @Override
         public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-            mFragmentManager.popBackStack((int)itemId, 0);
+            if (itemId >= 0) {
+                mFragmentManager.popBackStack((int) itemId, 0);
+            } else {
+                // pop all:
+                mFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            }
             return true;
         }
     };
@@ -132,9 +137,7 @@ public class DocumentBrowserActivity extends Activity implements
         mFragmentManager.addOnBackStackChangedListener(this);
 
         if (savedInstanceState == null) {
-            final Root root = DocumentsProviderRegistry.get().getDefault().getRoots().get(0);
-            replaceFragment(root, null);
-            mDrawerList.setItemChecked(mRootIndices.get(root), true);
+            selectItem(0);
         } else {
             int selected = savedInstanceState.getInt(SELECTED_ITEM);
             mCurrentDocumentId = savedInstanceState.getString(PATH);
@@ -174,19 +177,8 @@ public class DocumentBrowserActivity extends Activity implements
             mCurrentDocumentId = mRootId;
         }
 
-        getActionBar().setSelectedNavigationItem(newDepth - 1);
+        getActionBar().setSelectedNavigationItem(newDepth);
         invalidateOptionsMenu();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        //boolean hasBackStack = mFragmentManager.getBackStackEntryCount() > 0;
-
-        //ActionBar actionBar = getActionBar();
-        //actionBar.setDisplayHomeAsUpEnabled(hasBackStack);
-        //actionBar.setHomeButtonEnabled(hasBackStack);
-
-        return true;
     }
 
     @Override
@@ -250,7 +242,7 @@ public class DocumentBrowserActivity extends Activity implements
     private void changeProvider(Root root, String documentId) {
         if (root != mRoot) {
             mRootId = root.getDocumentId();
-            setTitle(root.getTitle());
+            mNavigationAdapter.setHeader(root.getTitle());
             mRoot = root;
             mCurrentDocumentId = (documentId != null) ? documentId : mRootId;
         } else if (documentId != null) {
@@ -270,9 +262,7 @@ public class DocumentBrowserActivity extends Activity implements
                     .replace(R.id.content_frame, fragment)
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
 
-            if (mCurrentDocumentId == mRootId) {
-                t.addToBackStack(mRoot.getTitle());
-            } else {
+            if (!mCurrentDocumentId.equals(mRootId)) {
                 t.addToBackStack(c.getName());
             }
             t.commit();

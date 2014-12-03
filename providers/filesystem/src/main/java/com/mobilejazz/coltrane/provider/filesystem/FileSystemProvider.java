@@ -208,10 +208,6 @@ public class FileSystemProvider extends AbstractDocumentsProvider {
         DocumentsProviderRegistry.get().register(ID, new FileSystemProvider(context));
     }
 
-    public static void registerAsDefault(Context context) {
-        DocumentsProviderRegistry.get().registerAsDefault(ID, new FileSystemProvider(context));
-    }
-
     private void includeFile(final MatrixCursor result, final File file, long id)
             throws FileNotFoundException {
         final MatrixCursor.RowBuilder row = result.newRow();

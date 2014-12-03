@@ -9,6 +9,6 @@ public class ExampleApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        FileSystemProvider.registerAsDefault(getApplicationContext());
+        FileSystemProvider.register(getApplicationContext());
     }
 }
