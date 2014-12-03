@@ -15,13 +15,47 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:paddingLeft">5dp</item>
         <item name="android:paddingRight">5dp</item>
-        <item name="android:textSize">18dp</item>
+        <item name="android:textSize">20dp</item>
         <item name="android:textColor">?android:attr/textColorHighlightInverse</item>
     </style>
 
     <style name="TopNavigationEntryDropdown" parent="TopNavigationEntry">
-        <item name="android:padding">10dp</item>
         <item name="android:drawablePadding">5dp</item>
+        <item name="android:padding">10dp</item>
         <item name="android:textSize">16dp</item>
+        <item name="android:textStyle">normal</item>
     </style>
+
+    <style name="LeftDrawerHeader">
+        <item name="android:layout_marginLeft">16dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:textSize">18dp</item>
+        <item name="android:textColor">?android:attr/textColorHighlightInverse</item>
+    </style>
+
+    <style name="ActionBar.Lollipop.DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="spinBars">true</item>
+        <item name="color">@android:color/white</item>
+        <item name="drawableSize">@dimen/actionbar.height</item>
+    </style>
+
+    <style name="AppTheme.actionBarDropDown" parent="android:style/Widget.Holo.Spinner">
+        <!-- TODO: create a more suitable background <item name="android:background">@drawable/dropdown_background</item>-->
+    </style>
+
+    <style name="DropDownList" parent="@android:style/Widget.Holo.Light.ListView.DropDown">
+        <!-- background of the list menu -->
+        <item name="background">@color/native.lollipop.actionbar.dropdown.background</item>
+        <item name="android:background">@color/native.lollipop.actionbar.dropdown.background</item>
+        <item name="android:popupBackground">@color/native.lollipop.actionbar.dropdown.background</item>
+        <!-- dividers -->
+        <item name="android:divider">@android:color/transparent</item>
+        <item name="android:dividerHeight">0dp</item>
+        <!-- item selected -->
+        <!--<item name="android:dropDownSelector">@android:color/holo_blue_dark</item>-->
+        <!--<item name="android:listSelector">@android:color/holo_blue_dark</item>-->
+    </style>
+
 </resources>

@@ -28,11 +28,13 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
@@ -68,26 +70,35 @@ public class DocumentBrowserActivity extends Activity implements
         }
     };
 
-    private ActionBar.OnNavigationListener mNavigationListener = new ActionBar.OnNavigationListener() {
+    private AdapterView.OnItemSelectedListener mNavigationListener = new AdapterView.OnItemSelectedListener() {
+
         @Override
-        public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-            if (itemId >= 0) {
-                mFragmentManager.popBackStack((int) itemId, 0);
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            if (id >= 0) {
+                mFragmentManager.popBackStack((int) id, 0);
             } else {
                 // pop all:
                 mFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             }
-            return true;
         }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+
+        }
+
     };
 
     private Root mRoot;
     private String mCurrentDocumentId;
     private String mRootId;
 
+    private Toolbar mToolbar;
+
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
+    private Spinner mNavigationDropDown;
 
     private ArrayAdapter<Root> mDrawerAdapter;
     private BackStackAdapter mNavigationAdapter;
@@ -104,7 +115,10 @@ public class DocumentBrowserActivity extends Activity implements
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
         mDrawerAdapter = new RootAdapter(this, R.layout.root, DocumentsProviderRegistry.get().getAllRoots());
 
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
+        mToolbar = (Toolbar)findViewById(R.id.toolbar);
+        getActionBar().hide();
+
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close) {
 
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
@@ -123,14 +137,10 @@ public class DocumentBrowserActivity extends Activity implements
         mDrawerList.setAdapter(mDrawerAdapter);
         populateRootIndices();
 
-        getActionBar().setDisplayShowHomeEnabled(false);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        getActionBar().setHomeButtonEnabled(true);
-
         mNavigationAdapter = new BackStackAdapter(this, getFragmentManager(), R.layout.navigation_item, R.layout.navigation_item_dropdown);
-        getActionBar().setDisplayShowTitleEnabled(false);
-        getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-        getActionBar().setListNavigationCallbacks(mNavigationAdapter, mNavigationListener);
+        mNavigationDropDown = (Spinner)findViewById(R.id.navigation_dropdown);
+        mNavigationDropDown.setOnItemSelectedListener(mNavigationListener);
+        mNavigationDropDown.setAdapter(mNavigationAdapter);
 
         mFragmentManager = getFragmentManager();
         mFragmentManager.addOnBackStackChangedListener(this);
@@ -175,8 +185,8 @@ public class DocumentBrowserActivity extends Activity implements
         } else {
             mCurrentDocumentId = mRootId;
         }
+        mNavigationDropDown.setSelection(newDepth);
 
-        getActionBar().setSelectedNavigationItem(newDepth);
         invalidateOptionsMenu();
     }
 
@@ -235,7 +245,7 @@ public class DocumentBrowserActivity extends Activity implements
 
         // Highlight the selected item, update the title, and close the drawer
         mDrawerList.setItemChecked(position, true);
-        mDrawerLayout.closeDrawer(mDrawerList);
+        mDrawerLayout.closeDrawers();
     }
 
     private void changeProvider(Root root, String documentId) {
