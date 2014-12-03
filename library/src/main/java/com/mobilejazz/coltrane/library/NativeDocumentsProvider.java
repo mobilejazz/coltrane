@@ -10,7 +10,7 @@ import android.os.ParcelFileDescriptor;
 import java.io.FileNotFoundException;
 
 @TargetApi(19)
-public abstract class DocumentsProviderAdapter extends android.provider.DocumentsProvider {
+public abstract class NativeDocumentsProvider extends android.provider.DocumentsProvider {
 
     protected abstract DocumentsProvider getDelegate();
 
