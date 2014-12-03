@@ -6,9 +6,14 @@ it supports API 14 and higher.
 
 ## How to use
 
-As already mentioned apps might have different requirements on file picking. This section is going
+Apps might have different requirements on file picking. This section is going
 to outline three of them, and how they can be easily set up with the help of this library. Note that
 all three scenarios are implemented in the example application that is part of this repository.
+
+The functionality of this library is distributed among multiple modules in order to support an extensible
+plugin-architecture right from the start. There is a basic library that defines the interface and then
+there are modules adding document providers and browser ui. For more information please refer to
+ the section on [Modular Architecture][].
 
 ### Custom UI
 
