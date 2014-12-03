@@ -29,3 +29,5 @@ dependencies {
     compile 'com.jakewharton.timber:timber:2.5.0'
     compile project(':library')
 }
+
+apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'
