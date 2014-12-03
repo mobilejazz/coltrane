@@ -26,8 +26,7 @@
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:name=".ExampleApplication"
-        >
+        android:name=".ExampleApplication">
         <activity
             android:name=".FileChooserExampleActivity"
             android:theme="@style/AppTheme" >
@@ -51,6 +50,17 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
-    </application>
 
+        <provider
+            android:name="com.mobilejazz.coltrane.provider.filesystem.NativeFileSystemProvider"
+            android:authorities="com.mobilejazz.coltrane.provider.filesystem.documents"
+            android:enabled="@bool/use_provider"
+            android:exported="true"
+            android:grantUriPermissions="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS" >
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+        </provider>
+    </application>
 </manifest>
