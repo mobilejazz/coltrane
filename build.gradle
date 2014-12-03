@@ -17,3 +17,10 @@ allprojects {
         jcenter()
     }
 }
+
+ext.compileSdkVersion=21
+ext.buildToolsVersion="21.1.1"
+ext.versionName="0.1.0"
+ext.versionCode=3
+ext.minSdkVersion=14
+ext.targetSdkVersion=21
