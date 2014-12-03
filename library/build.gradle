@@ -32,20 +32,8 @@ dependencies {
     compile 'com.jakewharton.timber:timber:2.5.0'
 }
 
-
-android.libraryVariants.all { variant ->
-    task("generate${variant.name}Javadoc", type: Javadoc) {
-        source = variant.javaCompile.source
-        def androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
-
-        classpath = files(variant.javaCompile.classpath.files, androidJar)
-        options {
-            links "http://docs.oracle.com/javase/7/docs/api/"
-            linksOffline "http://d.android.com/reference","${android.sdkDirectory}/docs/reference"
-        }
-        exclude '**/BuildConfig.java'
-        exclude '**/R.java'
-    }
-}
-
 apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'
+
+afterEvaluate {
+    androidJavadocs.classpath += project.android.libraryVariants.toList().first().javaCompile.classpath
+}
