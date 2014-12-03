@@ -12,8 +12,7 @@ all three scenarios are implemented in the example application that is part of t
 
 The functionality of this library is distributed among multiple modules in order to support an extensible
 plugin-architecture right from the start. There is a basic library that defines the interface and then
-there are modules adding document providers and browser ui. For more information please refer to
- the section on [Modular Architecture][].
+there are modules adding document providers and browser ui. For more information please refer to the section on Modular Architecture.
 
 ### Custom UI
 
