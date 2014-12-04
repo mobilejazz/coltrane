@@ -17,7 +17,7 @@ import java.util.List;
 
 import timber.log.Timber;
 
-import static android.provider.DocumentsContract.getDocumentId;
+import static com.mobilejazz.coltrane.library.compatibility.DocumentsContract.getDocumentId;
 
 public abstract class DocumentsProvider {
 
