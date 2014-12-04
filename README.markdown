@@ -21,6 +21,7 @@ providers you want to present the user and select a picker ui. If you go with th
 your gradle build file should have the following dependencies:
 
 ```gradle
+compile 'com.android.support:appcompat-v7:21.0.2'
 compile 'com.mobilejazz.coltrane:coltrane:0.1.0-SNAPSHOT@aar'
 compile 'com.mobilejazz.coltrane:coltrane-provider-filesystem:0.1.0-SNAPSHOT@aar'
 compile 'com.mobilejazz.coltrane:coltrane-ui:0.1.0-SNAPSHOT@aar'
