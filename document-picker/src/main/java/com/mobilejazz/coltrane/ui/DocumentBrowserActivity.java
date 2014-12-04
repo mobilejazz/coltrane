@@ -59,6 +59,9 @@ public class DocumentBrowserActivity extends Activity implements
     public static final String PATH = "com.mobilejazz.coltrane.ui.browser.path";
     public static final String SELECTED_ITEM = "com.mobilejazz.coltrane.ui.browser.selected";
 
+    public static final String EXTRA_PROVIDER = "com.mobilejazz.coltrane.ui.browser.result.provider";
+    public static final String EXTRA_DOCUMENT = "com.mobilejazz.coltrane.ui.browser.result.document";
+
     public static final String RESULT_ID = DocumentsContract.Document.COLUMN_DOCUMENT_ID;
 
     private FragmentManager mFragmentManager;
@@ -291,6 +294,8 @@ public class DocumentBrowserActivity extends Activity implements
     private void finishWithResult(DocumentCursor document) {
         Intent i = new Intent();
         i.setDataAndType(mRoot.getProvider().getContentUri(document.getId()), document.getMimeType());
+        i.putExtra(EXTRA_PROVIDER, mRoot.getProvider().getId());
+        i.putExtra(EXTRA_DOCUMENT, document.getId());
         setResult(Activity.RESULT_OK, i);
         finish();
     }
