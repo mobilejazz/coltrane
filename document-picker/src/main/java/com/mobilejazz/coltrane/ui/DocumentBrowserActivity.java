@@ -290,7 +290,7 @@ public class DocumentBrowserActivity extends Activity implements
      */
     private void finishWithResult(DocumentCursor document) {
         Intent i = new Intent();
-        i.setData(mRoot.getProvider().getContentUri(document.getId()));
+        i.setDataAndType(mRoot.getProvider().getContentUri(document.getId()), document.getMimeType());
         setResult(Activity.RESULT_OK, i);
         finish();
     }

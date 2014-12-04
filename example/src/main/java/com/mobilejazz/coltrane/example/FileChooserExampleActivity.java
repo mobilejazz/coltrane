@@ -105,8 +105,10 @@ public class FileChooserExampleActivity extends Activity {
                         // Get the URI of the selected file
                         Uri documentUri = data.getData();
                         try {
-                            Toast.makeText(FileChooserExampleActivity.this,
-                                    "File Selected: " + documentUri, Toast.LENGTH_LONG).show();
+                            Toast.makeText(FileChooserExampleActivity.this, "File Selected: " + documentUri, Toast.LENGTH_LONG).show();
+                            Intent view = new Intent(Intent.ACTION_VIEW);
+                            view.setDataAndType(data.getData(), data.getType());
+                            startActivity(view);
                         } catch (Exception e) {
                             Log.e("FileSelectorTestActivity", "File select error", e);
                         }
