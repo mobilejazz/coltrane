@@ -16,38 +16,14 @@
 
 package com.mobilejazz.coltrane.library.compatibility;
 
-import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ResolveInfo;
-import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.graphics.Point;
-import android.media.ExifInterface;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.CancellationSignal;
-import android.os.OperationCanceledException;
 import android.os.ParcelFileDescriptor;
 import android.os.ParcelFileDescriptor.OnCloseListener;
-import android.os.RemoteException;
-import android.system.ErrnoException;
-import android.system.Os;
-import android.util.Log;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.List;
-
-import static android.system.OsConstants.SEEK_SET;
 
 public final class DocumentsContract {
     private static final String TAG = "Documents";
@@ -61,7 +37,7 @@ public final class DocumentsContract {
 
         /**
          * Unique ID of a document. This ID is both provided by and interpreted
-         * by a {@link DocumentsProvider}, and should be treated as an opaque
+         * by a {@link com.mobilejazz.coltrane.library.DocumentsProvider}, and should be treated as an opaque
          * value by client applications. This column is required.
          * <p>
          * Each document must have a unique ID within a provider, but that
@@ -107,7 +83,7 @@ public final class DocumentsContract {
         /**
          * Timestamp when a document was last modified, in milliseconds since
          * January 1, 1970 00:00:00.0 UTC. This column is required, and may be
-         * {@code null} if unknown. A {@link DocumentsProvider} can update this
+         * {@code null} if unknown. A {@link com.mobilejazz.coltrane.library.DocumentsProvider} can update this
          * field using events from {@link OnCloseListener} or other reliable
          * {@link ParcelFileDescriptor} transports.
          * <p>
@@ -159,10 +135,6 @@ public final class DocumentsContract {
          * Flag indicating that a document can be represented as a thumbnail.
          *
          * @see #COLUMN_FLAGS
-         * @see DocumentsContract#getDocumentThumbnail(ContentResolver, Uri,
-         *      Point, CancellationSignal)
-         * @see DocumentsProvider#openDocumentThumbnail(String, Point,
-         *      android.os.CancellationSignal)
          */
         public static final int FLAG_SUPPORTS_THUMBNAIL = 1;
 
@@ -185,8 +157,7 @@ public final class DocumentsContract {
          * Flag indicating that a document is deletable.
          *
          * @see #COLUMN_FLAGS
-         * @see DocumentsContract#deleteDocument(ContentResolver, Uri)
-         * @see DocumentsProvider#deleteDocument(String)
+         * @see com.mobilejazz.coltrane.library.DocumentsProvider#deleteDocument(String)
          */
         public static final int FLAG_SUPPORTS_DELETE = 1 << 2;
 
@@ -196,7 +167,7 @@ public final class DocumentsContract {
          * {@link #MIME_TYPE_DIR}.
          *
          * @see #COLUMN_FLAGS
-         * @see DocumentsProvider#createDocument(String, String, String)
+         * @see com.mobilejazz.coltrane.library.DocumentsProvider#createDocument(String, String, String)
          */
         public static final int FLAG_DIR_SUPPORTS_CREATE = 1 << 3;
 
@@ -223,9 +194,7 @@ public final class DocumentsContract {
          * Flag indicating that a document can be renamed.
          *
          * @see #COLUMN_FLAGS
-         * @see DocumentsContract#renameDocument(ContentProviderClient, Uri,
-         *      String)
-         * @see DocumentsProvider#renameDocument(String, String)
+         * @see com.mobilejazz.coltrane.library.DocumentsProvider#renameDocument(String, String)
          */
         public static final int FLAG_SUPPORTS_RENAME = 1 << 6;
 
@@ -238,7 +207,6 @@ public final class DocumentsContract {
          *
          * @see #COLUMN_FLAGS
          * @see #FLAG_DIR_PREFERS_GRID
-         * @hide
          */
         public static final int FLAG_DIR_HIDE_GRID_TITLES = 1 << 16;
     }
@@ -258,7 +226,7 @@ public final class DocumentsContract {
 
         /**
          * Unique ID of a root. This ID is both provided by and interpreted by a
-         * {@link DocumentsProvider}, and should be treated as an opaque value
+         * {@link com.mobilejazz.coltrane.library.DocumentsProvider}, and should be treated as an opaque value
          * by client applications. This column is required.
          * <p>
          * Type: STRING
@@ -331,7 +299,6 @@ public final class DocumentsContract {
          */
         public static final String COLUMN_MIME_TYPES = "mime_types";
 
-        /** {@hide} */
         public static final String MIME_TYPE_ITEM = "vnd.android.document/root";
 
         /**
@@ -358,7 +325,7 @@ public final class DocumentsContract {
          *
          * @see #COLUMN_FLAGS
          * @see DocumentsContract#buildRecentDocumentsUri(String, String)
-         * @see DocumentsProvider#queryRecentDocuments(String, String[])
+         * @see com.mobilejazz.coltrane.library.DocumentsProvider#queryRecentDocuments(String, String[])
          */
         public static final int FLAG_SUPPORTS_RECENTS = 1 << 2;
 
@@ -368,7 +335,7 @@ public final class DocumentsContract {
          * @see #COLUMN_FLAGS
          * @see DocumentsContract#buildSearchDocumentsUri(String, String,
          *      String)
-         * @see DocumentsProvider#querySearchDocuments(String, String,
+         * @see com.mobilejazz.coltrane.library.DocumentsProvider#querySearchDocuments(String, String,
          *      String[])
          */
         public static final int FLAG_SUPPORTS_SEARCH = 1 << 3;
@@ -378,7 +345,6 @@ public final class DocumentsContract {
          * relationships.
          *
          * @see #COLUMN_FLAGS
-         * @see DocumentsProvider#isChildDocument(String, String)
          */
         public static final int FLAG_SUPPORTS_IS_CHILD = 1 << 4;
 
@@ -393,7 +359,6 @@ public final class DocumentsContract {
          * @see #COLUMN_FLAGS
          * @see ContentResolver#notifyChange(Uri,
          *      android.database.ContentObserver, boolean)
-         * @hide
          */
         public static final int FLAG_EMPTY = 1 << 16;
 
@@ -402,7 +367,6 @@ public final class DocumentsContract {
          * users.
          *
          * @see #COLUMN_FLAGS
-         * @hide
          */
         public static final int FLAG_ADVANCED = 1 << 17;
     }
@@ -435,14 +399,12 @@ public final class DocumentsContract {
      */
     public static final String EXTRA_ERROR = "error";
 
-    /** {@hide} */
     public static final String METHOD_CREATE_DOCUMENT = "android:createDocument";
-    /** {@hide} */
+
     public static final String METHOD_RENAME_DOCUMENT = "android:renameDocument";
-    /** {@hide} */
+
     public static final String METHOD_DELETE_DOCUMENT = "android:deleteDocument";
 
-    /** {@hide} */
     public static final String EXTRA_URI = "uri";
 
     private static final String PATH_ROOT = "root";
@@ -546,7 +508,6 @@ public final class DocumentsContract {
                 .appendPath(documentId).build();
     }
 
-    /** {@hide} */
     public static Uri buildDocumentUriMaybeUsingTree(Uri baseUri, String documentId) {
         if (isTreeUri(baseUri)) {
             return buildDocumentUriUsingTree(baseUri, documentId);
@@ -619,7 +580,6 @@ public final class DocumentsContract {
                 .appendQueryParameter(PARAM_QUERY, query).build();
     }
 
-    /** {@hide} */
     public static boolean isTreeUri(Uri uri) {
         final List<String> paths = uri.getPathSegments();
         return (paths.size() >= 2 && PATH_TREE.equals(paths.get(0)));
@@ -639,7 +599,6 @@ public final class DocumentsContract {
     /**
      * Extract the {@link Document#COLUMN_DOCUMENT_ID} from the given URI.
      *
-     * @see #isDocumentUri(Context, Uri)
      */
     public static String getDocumentId(Uri documentUri) {
         final List<String> paths = documentUri.getPathSegments();
@@ -672,12 +631,10 @@ public final class DocumentsContract {
         return searchDocumentsUri.getQueryParameter(PARAM_QUERY);
     }
 
-    /** {@hide} */
     public static Uri setManageMode(Uri uri) {
         return uri.buildUpon().appendQueryParameter(PARAM_MANAGE, "true").build();
     }
 
-    /** {@hide} */
     public static boolean isManageMode(Uri uri) {
         return uri.getBooleanQueryParameter(PARAM_MANAGE, false);
     }

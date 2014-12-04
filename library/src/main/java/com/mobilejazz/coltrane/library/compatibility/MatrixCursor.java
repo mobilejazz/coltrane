@@ -320,7 +320,7 @@ public class MatrixCursor extends AbstractCursor {
 
     /**
      * Returns data type of the given object's value.
-     *<p>
+     *
      * Returned values are
      * <ul>
      *   <li>{@link android.database.Cursor#FIELD_TYPE_NULL}</li>
@@ -329,11 +329,9 @@ public class MatrixCursor extends AbstractCursor {
      *   <li>{@link android.database.Cursor#FIELD_TYPE_STRING}</li>
      *   <li>{@link android.database.Cursor#FIELD_TYPE_BLOB}</li>
      *</ul>
-     *</p>
      *
      * @param obj the object whose value type is to be returned
      * @return object value type
-     * @hide
      */
     public static int getTypeOfObject(Object obj) {
         if (obj == null) {

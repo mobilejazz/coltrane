@@ -5,9 +5,9 @@ package com.mobilejazz.coltrane.library.compatibility;
  * URIs <em>must</em> support at least these columns when queried.
  * <p>
  * To find the content type of a URI, use
- * {@link ContentResolver#getType(android.net.Uri)}.
+ * {@link android.content.ContentResolver#getType(android.net.Uri)}.
  *
- * @see Intent#CATEGORY_OPENABLE
+ * @see android.content.Intent#CATEGORY_OPENABLE
  */
 public interface OpenableColumns {
 
