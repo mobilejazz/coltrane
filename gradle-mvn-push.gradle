@@ -87,15 +87,34 @@ afterEvaluate { project ->
         }
     }
 
+    task installArchives(type: Upload) {
+        description "Installs the artifacts to the local Maven repository."
+        configuration = configurations['archives']
+        repositories {
+            mavenDeployer {
+                pom.groupId = GROUP
+                pom.artifactId = POM_ARTIFACT_ID
+                pom.version = VERSION_NAME
+
+                repository url: "file://${System.properties['user.home']}/.m2/repository"
+            }
+        }
+    }
+
     signing {
         required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
         sign configurations.archives
     }
 
     task androidJavadocs(type: Javadoc) {
-        source = android.sourceSets.main.java.srcDirs
+        source = android.sourceSets.main.java.sourceFiles
         classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
         classpath += project.android.libraryVariants.toList().first().javaCompile.classpath
+        failOnError = false
+        options {
+            linksOffline "http://d.android.com/reference", "${android.sdkDirectory}/docs/reference"
+        }
+        exclude '**/R.html', '**/R.*.html'
     }
 
     task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
