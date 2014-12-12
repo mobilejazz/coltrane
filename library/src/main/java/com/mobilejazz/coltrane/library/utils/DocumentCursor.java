@@ -28,36 +28,60 @@ public class DocumentCursor extends CursorWrapper {
         mSize = c.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE);
     }
 
+    private String getStringField(int index) {
+        if (index >= 0) {
+            return getWrappedCursor().getString(index);
+        } else {
+            return null;
+        }
+    }
+
+    private Long getLongField(int index) {
+        if (index >= 0) {
+            return getWrappedCursor().getLong(index);
+        } else {
+            return null;
+        }
+    }
+
+    private Integer getIntField(int index) {
+        if (index >= 0) {
+            return getWrappedCursor().getInt(index);
+        } else {
+            return null;
+        }
+    }
+
     public String getId() {
-        return getWrappedCursor().getString(mId);
+        return getStringField(mId);
     }
 
     public String getMimeType() {
-        return getWrappedCursor().getString(mMimeType);
+        return getStringField(mMimeType);
     }
 
     public String getName() {
-        return getWrappedCursor().getString(mName);
+        return getStringField(mName);
     }
 
     public String getSummary() {
-        return getWrappedCursor().getString(mSummary);
+        return getStringField(mSummary);
     }
 
-    public long getLastModified() {
-        return getWrappedCursor().getLong(mLastModified);
+    public Long getLastModified() {
+        return getLongField(mLastModified);
     }
 
-    public int getIcon() {
-        return getWrappedCursor().getInt(mLastModified);
+    public Integer getIcon() {
+        return getIntField(mLastModified);
     }
 
-    public int getFlags() {
-        return getWrappedCursor().getInt(mLastModified);
+    public Integer getFlags() {
+        return getIntField(mLastModified);
     }
 
-    public long getSize() {
-        return getWrappedCursor().getLong(mSize);
+    public Long getSize() {
+        return getLongField(mSize);
     }
 
     public boolean isDirectory() {
