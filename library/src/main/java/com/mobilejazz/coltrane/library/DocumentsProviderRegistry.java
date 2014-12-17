@@ -36,6 +36,7 @@ public class DocumentsProviderRegistry {
 
     public void register(String id, DocumentsProvider provider) {
         mProviders.put(id, provider);
+        provider.onCreate();
     }
 
     public Collection<DocumentsProvider> getAll() {

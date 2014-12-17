@@ -51,10 +51,8 @@ public class FileSystemProvider extends DocumentsProvider {
             DocumentsContract.Document.COLUMN_LAST_MODIFIED
     };
 
-    protected Context mContext;
-
     public FileSystemProvider(Context context) {
-        this.mContext = context;
+        super(context);
     }
 
     @Override
@@ -70,7 +68,7 @@ public class FileSystemProvider extends DocumentsProvider {
         row.add(_ID, 0L); // for supporting CursorAdapter
         row.add(DocumentsContract.Root.COLUMN_ROOT_ID, homeDir.getAbsolutePath());
         row.add(DocumentsContract.Root.COLUMN_DOCUMENT_ID, homeDir.getAbsolutePath());
-        row.add(DocumentsContract.Root.COLUMN_TITLE, mContext.getString(R.string.internal_storage));
+        row.add(DocumentsContract.Root.COLUMN_TITLE, getContext().getString(R.string.internal_storage));
         row.add(DocumentsContract.Root.COLUMN_FLAGS, DocumentsContract.Root.FLAG_LOCAL_ONLY | DocumentsContract.Root.FLAG_SUPPORTS_CREATE);
         row.add(DocumentsContract.Root.COLUMN_ICON, R.drawable.ic_provider);
         // These columns are optional
@@ -149,7 +147,7 @@ public class FileSystemProvider extends DocumentsProvider {
         File tempFile = null;
         FileOutputStream out = null;
         try {
-            tempFile = File.createTempFile("thumbnail", null, mContext.getCacheDir());
+            tempFile = File.createTempFile("thumbnail", null, getContext().getCacheDir());
             out = new FileOutputStream(tempFile);
             bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
         } catch (IOException e) {

@@ -1,6 +1,7 @@
 package com.mobilejazz.coltrane.library;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.graphics.Point;
@@ -27,6 +28,16 @@ public abstract class DocumentsProvider {
     private static final int MATCH_CHILDREN = 6;
     private static final int MATCH_DOCUMENT_TREE = 7;
     private static final int MATCH_CHILDREN_TREE = 8;
+
+    private Context mContext;
+
+    public Context getContext() {
+        return mContext;
+    }
+
+    public DocumentsProvider(Context context) {
+        mContext = context;
+    }
 
     public abstract Cursor queryRoots(String[] projection) throws FileNotFoundException;
 
@@ -78,5 +89,9 @@ public abstract class DocumentsProvider {
     }
 
     public abstract Uri getContentUri(String documentId);
+
+    public boolean onCreate() {
+        return true;
+    }
 
 }
