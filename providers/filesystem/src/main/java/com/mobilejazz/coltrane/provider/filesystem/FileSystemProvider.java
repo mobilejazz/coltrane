@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
@@ -236,6 +237,8 @@ public class FileSystemProvider extends DocumentsProvider {
         // file
     }
 
-
-
+    @Override
+    public Uri getContentUri(String documentId) {
+        return Uri.fromFile(new File(documentId));
+    }
 }

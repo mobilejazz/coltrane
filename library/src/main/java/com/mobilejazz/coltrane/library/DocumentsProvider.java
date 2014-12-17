@@ -17,8 +17,6 @@ import java.util.List;
 
 import timber.log.Timber;
 
-import static com.mobilejazz.coltrane.library.compatibility.DocumentsContract.getDocumentId;
-
 public abstract class DocumentsProvider {
 
     private static final int MATCH_ROOTS = 1;
@@ -79,49 +77,6 @@ public abstract class DocumentsProvider {
         throw new UnsupportedOperationException("Search not supported");
     }
 
-    // Utility methods:
-
-    /**
-     * Implementation is provided by the parent class. Cannot be overriden.
-     *
-     * @see #openDocument(String, String, CancellationSignal)
-     */
-    public final ParcelFileDescriptor openFile(Uri uri, String mode) throws FileNotFoundException {
-        return openDocument(getDocumentId(uri), mode, null);
-    }
-
-    /**
-     * Implementation is provided by the parent class. Cannot be overriden.
-     *
-     * @see #openDocument(String, String, CancellationSignal)
-     */
-    public final ParcelFileDescriptor openFile(Uri uri, String mode, CancellationSignal signal)
-            throws FileNotFoundException {
-        return openDocument(getDocumentId(uri), mode, signal);
-    }
-
-    /**
-     * Implementation is provided by the parent class. Cannot be overriden.
-     *
-     * @see #openDocument(String, String, CancellationSignal)
-     */
-    @SuppressWarnings("resource")
-    public final AssetFileDescriptor openAssetFile(Uri uri, String mode)
-            throws FileNotFoundException {
-        final ParcelFileDescriptor fd = openDocument(getDocumentId(uri), mode, null);
-        return fd != null ? new AssetFileDescriptor(fd, 0, -1) : null;
-    }
-
-    /**
-     * Implementation is provided by the parent class. Cannot be overriden.
-     *
-     * @see #openDocument(String, String, CancellationSignal)
-     */
-    @SuppressWarnings("resource")
-    public final AssetFileDescriptor openAssetFile(Uri uri, String mode, CancellationSignal signal)
-            throws FileNotFoundException {
-        final ParcelFileDescriptor fd = openDocument(getDocumentId(uri), mode, signal);
-        return fd != null ? new AssetFileDescriptor(fd, 0, -1) : null;
-    }
+    public abstract Uri getContentUri(String documentId);
 
 }
