@@ -1,6 +1,7 @@
 package com.mobilejazz.coltrane.library;
 
 import android.app.PendingIntent;
+import android.content.Context;
 
 public class Root {
 
@@ -112,5 +113,6 @@ public class Root {
 
     // TODO: complete
 
+    public void update(Context context) {}
 
 }

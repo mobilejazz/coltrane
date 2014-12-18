@@ -18,6 +18,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
+import com.google.api.services.drive.model.About;
 import com.google.api.services.drive.model.File;
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
@@ -25,7 +26,6 @@ import com.mobilejazz.coltrane.library.Root;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -47,25 +47,18 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
 
         private Document mRootDocument;
 
-        public GDriveRoot(GoogleDriveProvider provider, Context context, Account account, Drive drive) throws IOException {
-            try {
-                mAccount = account;
-                mDrive = drive;
-                mRootDocument = new Document(this, ROOT_FOLDER);
+        public GDriveRoot(GoogleDriveProvider provider, Account account, Drive drive) throws IOException {
+            mAccount = account;
+            mDrive = drive;
 
-                setId(account.name);
-                setTitle(account.name);
-                setDocumentId(mRootDocument.getDocumentId());
-                setFlags(0); // TODO
-                setIcon(R.drawable.ic_provider);
-                setProvider(provider);
+            setId(account.name);
+            setTitle(account.name);
+            setFlags(0); // TODO
+            setIcon(R.drawable.ic_provider_gdrive);
+            setProvider(provider);
 
-                // check connection:
-                setAvailableBytes(drive.about().get().execute().getQuotaBytesTotal());
-
-            } catch (UserRecoverableAuthIOException e) {
-                setPendingAction(PendingIntent.getActivity(context, REQUEST_RESOLVE_AUTH_ISSUE, e.getIntent(), 0));
-            }
+            // check connection:
+            update(provider.getContext());
         }
 
         public Account getAccount() {
@@ -78,6 +71,21 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
 
         public Document getRootDocument() {
             return mRootDocument;
+        }
+
+        @Override
+        public void update(Context context) {
+            try {
+                About about = mDrive.about().get().execute();
+                setAvailableBytes(about.getQuotaBytesTotal());
+                mRootDocument = new Document(this, about.getRootFolderId());
+                setDocumentId(mRootDocument.getDocumentId());
+                setPendingAction(null);
+            } catch (UserRecoverableAuthIOException e) {
+                setPendingAction(PendingIntent.getActivity(context, REQUEST_RESOLVE_AUTH_ISSUE, e.getIntent(), 0));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
     }
@@ -149,9 +157,9 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                     credential.setSelectedAccountName(a.name);
                     Drive service = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), credential).build();
                     try {
-                        mRoots.put(a.name, new GDriveRoot(this, getContext(), a, service));
+                        mRoots.put(a.name, new GDriveRoot(this, a, service));
                     } catch (UserRecoverableAuthIOException e) {
-                        mRoots.put(a.name, new GDriveRoot(this, getContext(), a, null));
+                        mRoots.put(a.name, new GDriveRoot(this, a, null));
                     }
                 }
             }
@@ -166,7 +174,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
     public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException {
         try {
             Document d = new Document(mRoots, parentDocumentId);
-            List<File> files = d.getRoot().getDrive().files().list().setQ("'" + parentDocumentId + "'" + " in parents and trashed=false").execute().getItems();
+            List<File> files = d.getRoot().getDrive().files().list().setQ("'" + d.getDriveId() + "'" + " in parents and trashed=false").execute().getItems();
             return new FileCursor(d.getRoot(), files);
         } catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());

@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.LoaderManager;
+import android.app.PendingIntent;
 import android.content.AsyncTaskLoader;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -239,15 +240,48 @@ public class DocumentBrowserActivity extends Activity implements
         }
     }
 
-    private void selectItem(int position) {
-        Root root = (Root)mDrawerList.getItemAtPosition(position);
-        if (root != mRoot) {
-            replaceFragment(root, null);
-        }
+    private void selectItem(final int position) {
+        final Root root = (Root)mDrawerList.getItemAtPosition(position);
 
-        // Highlight the selected item, update the title, and close the drawer
-        mDrawerList.setItemChecked(position, true);
-        mDrawerLayout.closeDrawers();
+        if (root.isConnected()) {
+            if (root != mRoot) {
+                replaceFragment(root, null);
+            }
+
+            // Highlight the selected item, update the title, and close the drawer
+            mDrawerList.setItemChecked(position, true);
+            mDrawerLayout.closeDrawers();
+        } else {
+            try {
+                root.getPendingAction().send(0, new PendingIntent.OnFinished() {
+                    @Override
+                    public void onSendFinished(PendingIntent pendingIntent, Intent intent, int resultCode, String resultData, Bundle resultExtras) {
+                        new AsyncTask<Void, Void, Void>() {
+
+                            @Override
+                            protected Void doInBackground(Void... params) {
+                                root.update(DocumentBrowserActivity.this);
+                                return null;
+                            }
+
+                            @Override
+                            protected void onPostExecute(Void aVoid) {
+                                if (root != mRoot) {
+                                    replaceFragment(root, null);
+                                }
+
+                                // Highlight the selected item, update the title, and close the drawer
+                                mDrawerList.setItemChecked(position, true);
+                                mDrawerLayout.closeDrawers();
+                            }
+
+                        }.execute();
+                    }
+                }, null);
+            } catch (PendingIntent.CanceledException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void changeProvider(Root root, String documentId) {
