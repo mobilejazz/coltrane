@@ -16,9 +16,13 @@
 
 package com.mobilejazz.coltrane.library;
 
+import android.app.PendingIntent;
+
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +31,7 @@ public class DocumentsProviderRegistry {
     private Map<String, DocumentsProvider> mProviders;
 
     public DocumentsProviderRegistry() {
-        mProviders = new HashMap<String, DocumentsProvider>();
+        mProviders = new LinkedHashMap<String, DocumentsProvider>();
     }
 
     public DocumentsProvider getProvider(String id) {
@@ -35,8 +39,9 @@ public class DocumentsProviderRegistry {
     }
 
     public void register(String id, DocumentsProvider provider) {
-        mProviders.put(id, provider);
-        provider.onCreate();
+        if (provider.onCreate()) {
+            mProviders.put(id, provider);
+        }
     }
 
     public Collection<DocumentsProvider> getAll() {
@@ -44,11 +49,15 @@ public class DocumentsProviderRegistry {
     }
 
     public List<Root> getAllRoots() {
-        List<Root> result = new ArrayList<Root>();
+        List<Root> roots = new ArrayList<Root>();
         for (DocumentsProvider p : getAll()) {
-            result.addAll(p.getRoots());
+            try {
+                roots.addAll(p.getRoots());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
         }
-        return result;
+        return roots;
     }
 
     private static DocumentsProviderRegistry instance;

@@ -6,17 +6,47 @@ import android.database.Cursor;
 import android.graphics.Point;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
+import android.provider.BaseColumns;
+
+import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
+import com.mobilejazz.coltrane.library.compatibility.MatrixCursor;
 
 import java.io.FileNotFoundException;
+import java.util.Collection;
+import java.util.List;
 
 @TargetApi(19)
 public abstract class NativeDocumentsProvider extends android.provider.DocumentsProvider {
+
+    /**
+     * Default root projection: everything but Root.COLUMN_MIME_TYPES
+     */
+    private final static String[] DEFAULT_ROOT_PROJECTION = new String[] {
+            BaseColumns._ID,
+            DocumentsContract.Root.COLUMN_ROOT_ID,
+            DocumentsContract.Root.COLUMN_FLAGS,
+            DocumentsContract.Root.COLUMN_TITLE,
+            DocumentsContract.Root.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Root.COLUMN_ICON,
+            DocumentsContract. Root.COLUMN_AVAILABLE_BYTES
+    };
 
     protected abstract DocumentsProvider getDelegate();
 
     @Override
     public Cursor queryRoots(String[] projection) throws FileNotFoundException {
-        return getDelegate().queryRoots(projection);
+        Collection<? extends Root> roots = getDelegate().getRoots();
+        MatrixCursor cursor = new MatrixCursor(projection != null ? projection : DEFAULT_ROOT_PROJECTION, roots.size());
+        for (Root r : roots) {
+            MatrixCursor.RowBuilder row = cursor.newRow();
+            row.add(DocumentsContract.Root.COLUMN_ROOT_ID, r.getId());
+            row.add(DocumentsContract.Root.COLUMN_DOCUMENT_ID, r.getDocumentId());
+            row.add(DocumentsContract.Root.COLUMN_TITLE, r.getTitle());
+            row.add(DocumentsContract.Root.COLUMN_ICON, r.getIcon());
+            row.add(DocumentsContract.Root.COLUMN_FLAGS, r.getFlags());
+            row.add(DocumentsContract.Root.COLUMN_AVAILABLE_BYTES, r.getAvailableBytes());
+        }
+        return cursor;
     }
 
     @Override

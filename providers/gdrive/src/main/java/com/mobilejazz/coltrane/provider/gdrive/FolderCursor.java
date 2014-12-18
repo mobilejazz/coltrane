@@ -16,6 +16,7 @@ public class FolderCursor extends MetadataCursor {
     public FolderCursor(GoogleApiClient client, DriveFolder folder) {
         super(client);
         this.mFolder = folder;
+        requery();
     }
 
     @Override

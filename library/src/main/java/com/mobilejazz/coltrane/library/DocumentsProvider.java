@@ -1,22 +1,15 @@
 package com.mobilejazz.coltrane.library;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.graphics.Point;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
 
-import com.mobilejazz.coltrane.library.utils.RootCursor;
-
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-
-import timber.log.Timber;
+import java.util.Collection;
 
 public abstract class DocumentsProvider {
 
@@ -39,8 +32,6 @@ public abstract class DocumentsProvider {
         mContext = context;
     }
 
-    public abstract Cursor queryRoots(String[] projection) throws FileNotFoundException;
-
     public abstract Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException;
 
     public abstract Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException;
@@ -49,20 +40,7 @@ public abstract class DocumentsProvider {
 
     public abstract String getId();
 
-    public List<Root> getRoots() {
-        List<Root> result = new ArrayList<Root>();
-        try {
-            RootCursor c = new RootCursor(queryRoots(null));
-            c.moveToFirst();
-            while (!c.isAfterLast()) {
-                result.add(new Root(this, c.getId(), c.getDocumentId(), c.getTitle(), c.getIcon()));
-                c.moveToNext();
-            }
-        } catch (FileNotFoundException e) {
-            Timber.e(e, e.getLocalizedMessage());
-        }
-        return result;
-    }
+    public abstract Collection<? extends Root> getRoots() throws FileNotFoundException;
 
     public AssetFileDescriptor openDocumentThumbnail(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException {
         throw new UnsupportedOperationException("Document thumbnails not supported");
