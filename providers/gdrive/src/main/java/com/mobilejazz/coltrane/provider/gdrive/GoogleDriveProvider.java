@@ -58,7 +58,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             setProvider(provider);
 
             // check connection:
-            update(provider.getContext());
+            update();
         }
 
         public Account getAccount() {
@@ -74,7 +74,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
         }
 
         @Override
-        public void update(Context context) {
+        public void update() {
             try {
                 About about = mDrive.about().get().execute();
                 setAvailableBytes(about.getQuotaBytesTotal());
@@ -82,7 +82,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                 setDocumentId(mRootDocument.getDocumentId());
                 setPendingAction(null);
             } catch (UserRecoverableAuthIOException e) {
-                setPendingAction(PendingIntent.getActivity(context, REQUEST_RESOLVE_AUTH_ISSUE, e.getIntent(), 0));
+                setPendingAction(e.getIntent());
             } catch (IOException e) {
                 e.printStackTrace();
             }
