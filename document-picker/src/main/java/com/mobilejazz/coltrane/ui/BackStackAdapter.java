@@ -34,6 +34,7 @@ public class BackStackAdapter extends BaseAdapter implements FragmentManager.OnB
 
     public void setHeader(String header) {
         mHeader = header;
+        notifyDataSetChanged();
     }
 
     public String getHeader() {

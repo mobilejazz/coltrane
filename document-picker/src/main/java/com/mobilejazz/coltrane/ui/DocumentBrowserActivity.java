@@ -20,12 +20,16 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.LoaderManager;
+import android.content.AsyncTaskLoader;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.Loader;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
@@ -41,11 +45,13 @@ import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
+import com.mobilejazz.coltrane.library.utils.AsyncLoader;
 import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 import com.mobilejazz.coltrane.library.utils.RootCursor;
 
 import java.io.FileNotFoundException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import timber.log.Timber;
@@ -54,7 +60,9 @@ import timber.log.Timber;
  * Main Activity that handles the FileListFragments
  */
 public class DocumentBrowserActivity extends Activity implements
-        FragmentManager.OnBackStackChangedListener, DocumentListFragment.Callbacks {
+        FragmentManager.OnBackStackChangedListener, DocumentListFragment.Callbacks, LoaderManager.LoaderCallbacks<List<Root>> {
+
+    private static final int LOADER_ROOTS = 1;
 
     public static final String PATH = "com.mobilejazz.coltrane.ui.browser.path";
     public static final String SELECTED_ITEM = "com.mobilejazz.coltrane.ui.browser.selected";
@@ -107,16 +115,22 @@ public class DocumentBrowserActivity extends Activity implements
     private BackStackAdapter mNavigationAdapter;
     private Map<Root, Integer> mRootIndices;
 
+    private Bundle mSavedInstanceState;
+
+    private Handler mHandler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.picker);
 
+        mHandler = new Handler();
+
         // Setting up the navigation:
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
-        mDrawerAdapter = new RootAdapter(this, R.layout.root, DocumentsProviderRegistry.get().getAllRoots());
+        mDrawerAdapter = new RootAdapter(this, R.layout.root);
 
         mToolbar = (Toolbar)findViewById(R.id.toolbar);
         getActionBar().hide();
@@ -138,7 +152,7 @@ public class DocumentBrowserActivity extends Activity implements
         mDrawerLayout.setDrawerListener(mDrawerToggle);
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
         mDrawerList.setAdapter(mDrawerAdapter);
-        populateRootIndices();
+
 
         mNavigationAdapter = new BackStackAdapter(this, getFragmentManager(), R.layout.navigation_item, R.layout.navigation_item_dropdown);
         mNavigationDropDown = (Spinner)findViewById(R.id.navigation_dropdown);
@@ -148,13 +162,9 @@ public class DocumentBrowserActivity extends Activity implements
         mFragmentManager = getFragmentManager();
         mFragmentManager.addOnBackStackChangedListener(this);
 
-        if (savedInstanceState == null) {
-            selectItem(0);
-        } else {
-            int selected = savedInstanceState.getInt(SELECTED_ITEM);
-            mCurrentDocumentId = savedInstanceState.getString(PATH);
-            selectItem(selected);
-        }
+        mSavedInstanceState = savedInstanceState;
+
+        getLoaderManager().initLoader(LOADER_ROOTS, null, this);
     }
 
     @Override
@@ -328,6 +338,41 @@ public class DocumentBrowserActivity extends Activity implements
      */
     private void unregisterStorageListener() {
         unregisterReceiver(mStorageListener);
+    }
+
+    @Override
+    public Loader<List<Root>> onCreateLoader(int id, Bundle args) {
+        return new AsyncLoader<List<Root>>(this) {
+            @Override
+            public List<Root> loadInBackground() {
+                return DocumentsProviderRegistry.get().getAllRoots();
+            }
+        };
+    }
+
+    @Override
+    public void onLoadFinished(Loader<List<Root>> loader, List<Root> data) {
+        mDrawerAdapter.clear();
+        mDrawerAdapter.addAll(data);
+        populateRootIndices();
+
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mSavedInstanceState == null) {
+                    selectItem(0);
+                } else {
+                    int selected = mSavedInstanceState.getInt(SELECTED_ITEM);
+                    mCurrentDocumentId = mSavedInstanceState.getString(PATH);
+                    selectItem(selected);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<Root>> loader) {
+        mDrawerAdapter.clear();
     }
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {

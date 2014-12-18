@@ -13,29 +13,8 @@ import java.util.List;
 
 public class RootAdapter extends ArrayAdapter<Root> {
 
-
     public RootAdapter(Context context, int resource) {
         super(context, resource);
-    }
-
-    public RootAdapter(Context context, int resource, int textViewResourceId) {
-        super(context, resource, textViewResourceId);
-    }
-
-    public RootAdapter(Context context, int resource, Root[] objects) {
-        super(context, resource, objects);
-    }
-
-    public RootAdapter(Context context, int resource, int textViewResourceId, Root[] objects) {
-        super(context, resource, textViewResourceId, objects);
-    }
-
-    public RootAdapter(Context context, int resource, List<Root> objects) {
-        super(context, resource, objects);
-    }
-
-    public RootAdapter(Context context, int resource, int textViewResourceId, List<Root> objects) {
-        super(context, resource, textViewResourceId, objects);
     }
 
     @Override
