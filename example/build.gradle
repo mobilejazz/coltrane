@@ -40,5 +40,6 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':library')
     compile project(':filesystem')
+    compile project(':gdrive')
     compile project(':document-picker')
 }
