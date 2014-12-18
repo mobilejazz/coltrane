@@ -74,6 +74,8 @@ public class DocumentBrowserActivity extends Activity implements
 
     public static final String RESULT_ID = DocumentsContract.Document.COLUMN_DOCUMENT_ID;
 
+    public static final int REQUEST_RESOLVE_PROVIDER_ISSUE = 35092;
+
     private FragmentManager mFragmentManager;
     private BroadcastReceiver mStorageListener = new BroadcastReceiver() {
         @Override
@@ -120,6 +122,8 @@ public class DocumentBrowserActivity extends Activity implements
     private Bundle mSavedInstanceState;
 
     private Handler mHandler;
+
+    private Integer mPendingPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -252,35 +256,34 @@ public class DocumentBrowserActivity extends Activity implements
             mDrawerList.setItemChecked(position, true);
             mDrawerLayout.closeDrawers();
         } else {
-            try {
-                root.getPendingAction().send(0, new PendingIntent.OnFinished() {
-                    @Override
-                    public void onSendFinished(PendingIntent pendingIntent, Intent intent, int resultCode, String resultData, Bundle resultExtras) {
-                        new AsyncTask<Void, Void, Void>() {
+            mPendingPosition = position;
+            startActivityForResult(root.getPendingAction(), REQUEST_RESOLVE_PROVIDER_ISSUE);
+        }
+    }
 
-                            @Override
-                            protected Void doInBackground(Void... params) {
-                                root.update(DocumentBrowserActivity.this);
-                                return null;
-                            }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_RESOLVE_PROVIDER_ISSUE:
+                if (mPendingPosition != null) {
+                    final Root root = (Root) mDrawerList.getItemAtPosition(mPendingPosition);
+                    new AsyncTask<Void, Void, Void>() {
 
-                            @Override
-                            protected void onPostExecute(Void aVoid) {
-                                if (root != mRoot) {
-                                    replaceFragment(root, null);
-                                }
+                        @Override
+                        protected Void doInBackground(Void... params) {
+                            root.update();
+                            return null;
+                        }
 
-                                // Highlight the selected item, update the title, and close the drawer
-                                mDrawerList.setItemChecked(position, true);
-                                mDrawerLayout.closeDrawers();
-                            }
+                        @Override
+                        protected void onPostExecute(Void aVoid) {
+                            selectItem(mPendingPosition);
+                        }
 
-                        }.execute();
-                    }
-                }, null);
-            } catch (PendingIntent.CanceledException e) {
-                e.printStackTrace();
-            }
+                    }.execute();
+                }
+                break;
         }
     }
 

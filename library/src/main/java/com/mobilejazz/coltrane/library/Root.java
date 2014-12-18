@@ -2,11 +2,12 @@ package com.mobilejazz.coltrane.library;
 
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 
 public class Root {
 
     private DocumentsProvider provider;
-    private PendingIntent pendingAction;
+    private Intent pendingAction;
 
     private String id;
     private String documentId;
@@ -17,7 +18,7 @@ public class Root {
 
     public Root() {}
 
-    public Root(DocumentsProvider provider, String id, String documentId, String title, int icon, long availableBytes, int flags, PendingIntent pendingAction) {
+    public Root(DocumentsProvider provider, String id, String documentId, String title, int icon, long availableBytes, int flags, Intent pendingAction) {
         this.provider = provider;
         this.id = id;
         this.documentId = documentId;
@@ -75,7 +76,7 @@ public class Root {
         return pendingAction == null;
     }
 
-    public PendingIntent getPendingAction() {
+    public Intent getPendingAction() {
         return pendingAction;
     }
 
@@ -83,7 +84,7 @@ public class Root {
         this.provider = provider;
     }
 
-    public void setPendingAction(PendingIntent pendingAction) {
+    public void setPendingAction(Intent pendingAction) {
         this.pendingAction = pendingAction;
     }
 
@@ -113,6 +114,6 @@ public class Root {
 
     // TODO: complete
 
-    public void update(Context context) {}
+    public void update() {}
 
 }
