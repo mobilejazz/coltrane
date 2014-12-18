@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.Loader;
 import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.widget.DrawerLayout;
@@ -238,18 +239,6 @@ public class DocumentBrowserActivity extends Activity implements
         }
     }
 
-    private RootCursor getRoot(DocumentsProvider provider) {
-        try {
-            RootCursor c = new RootCursor(provider.queryRoots(null));
-            c.moveToFirst();
-            return c;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            finish();
-            return null;
-        }
-    }
-
     private void selectItem(int position) {
         Root root = (Root)mDrawerList.getItemAtPosition(position);
         if (root != mRoot) {
@@ -272,27 +261,41 @@ public class DocumentBrowserActivity extends Activity implements
         }
     }
 
-    private void replaceFragment(Root root, String documentId) {
-        try {
-            changeProvider(root, documentId);
-            DocumentListFragment fragment = DocumentListFragment.newInstance(root.getProvider().getId(), mCurrentDocumentId);
+    private void replaceFragment(final Root root, String documentId) {
+        changeProvider(root, documentId);
 
-            DocumentCursor c = new DocumentCursor(mRoot.getProvider().queryDocument(mCurrentDocumentId, null));
-            c.moveToFirst();
 
-            FragmentTransaction t = mFragmentManager.beginTransaction()
-                    .replace(R.id.content_frame, fragment)
-                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        new AsyncTask<Void, Void, DocumentCursor>() {
 
-            if (!mCurrentDocumentId.equals(mRootId)) {
-                t.addToBackStack(c.getName());
+            @Override
+            protected DocumentCursor doInBackground(Void... params) {
+                try {
+                    return new DocumentCursor(mRoot.getProvider().queryDocument(mCurrentDocumentId, null));
+                } catch (FileNotFoundException e) {
+                    // TODO
+                    return null;
+                }
             }
-            t.commit();
 
-            c.close();
-        } catch (FileNotFoundException e) {
-            Timber.e(e, e.getLocalizedMessage());
-        }
+            @Override
+            protected void onPostExecute(DocumentCursor c) {
+                c.moveToFirst();
+
+                DocumentListFragment fragment = DocumentListFragment.newInstance(root.getProvider().getId(), mCurrentDocumentId);
+
+                FragmentTransaction t = mFragmentManager.beginTransaction()
+                        .replace(R.id.content_frame, fragment)
+                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+
+                if (!mCurrentDocumentId.equals(mRootId)) {
+                    t.addToBackStack(c.getName());
+                }
+                t.commit();
+
+                c.close();
+            }
+
+        }.execute();
     }
 
 
