@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="actionbar.height">48dp</dimen>
-
+    <dimen name="drawer.width">300dp</dimen>
 </resources>
