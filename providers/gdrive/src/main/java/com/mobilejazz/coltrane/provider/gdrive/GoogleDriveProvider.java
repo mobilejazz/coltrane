@@ -154,9 +154,10 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             if (mRoots == null) {
                 mRoots = new TreeMap<String, GDriveRoot>();
 
-                Account[] accounts = AccountManager.get(getContext()).getAccountsByType("com.google");
+                GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
+                Account[] accounts = credential.getAllAccounts(); //AccountManager.get(getContext()).getAccountsByType("com.google");
                 for (Account a : accounts) {
-                    GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
+                    credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
                     credential.setSelectedAccountName(a.name);
                     Drive service = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), credential).build();
                     try {
