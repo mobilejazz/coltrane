@@ -249,7 +249,7 @@ public class DocumentBrowserActivity extends Activity implements
 
         if (root.isConnected()) {
             if (root != mRoot) {
-                replaceFragment(root, null);
+                replaceFragment(root, null, root.getTitle());
             }
 
             // Highlight the selected item, update the title, and close the drawer
@@ -298,41 +298,18 @@ public class DocumentBrowserActivity extends Activity implements
         }
     }
 
-    private void replaceFragment(final Root root, String documentId) {
+    private void replaceFragment(final Root root, String documentId, String documentName) {
         changeProvider(root, documentId);
+        DocumentListFragment fragment = DocumentListFragment.newInstance(root.getProvider().getId(), mCurrentDocumentId);
 
+        FragmentTransaction t = mFragmentManager.beginTransaction()
+                .replace(R.id.content_frame, fragment)
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
 
-        new AsyncTask<Void, Void, DocumentCursor>() {
-
-            @Override
-            protected DocumentCursor doInBackground(Void... params) {
-                try {
-                    return new DocumentCursor(mRoot.getProvider().queryDocument(mCurrentDocumentId, null));
-                } catch (FileNotFoundException e) {
-                    // TODO
-                    return null;
-                }
-            }
-
-            @Override
-            protected void onPostExecute(DocumentCursor c) {
-                c.moveToFirst();
-
-                DocumentListFragment fragment = DocumentListFragment.newInstance(root.getProvider().getId(), mCurrentDocumentId);
-
-                FragmentTransaction t = mFragmentManager.beginTransaction()
-                        .replace(R.id.content_frame, fragment)
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-
-                if (!mCurrentDocumentId.equals(mRootId)) {
-                    t.addToBackStack(c.getName());
-                }
-                t.commit();
-
-                c.close();
-            }
-
-        }.execute();
+        if (!mCurrentDocumentId.equals(mRootId)) {
+            t.addToBackStack(documentName);
+        }
+        t.commit();
     }
 
 
@@ -357,7 +334,7 @@ public class DocumentBrowserActivity extends Activity implements
                     Toast.LENGTH_SHORT).show();
         } else {
             if (document.isDirectory()) {
-                replaceFragment(mRoot, document.getId());
+                replaceFragment(mRoot, document.getId(), document.getName());
             } else {
                 finishWithResult(document);
             }
