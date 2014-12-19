@@ -62,7 +62,8 @@ public class DocumentBrowserActivity extends Activity implements
     public static final String SELECTED_ITEM = "com.mobilejazz.coltrane.ui.browser.selected";
 
     public static final String EXTRA_PROVIDER = "com.mobilejazz.coltrane.ui.browser.result.provider";
-    public static final String EXTRA_DOCUMENT = "com.mobilejazz.coltrane.ui.browser.result.document";
+    public static final String EXTRA_DOCUMENT_ID = "com.mobilejazz.coltrane.ui.browser.result.document.id";
+    public static final String EXTRA_DOCUMENT_NAME = "com.mobilejazz.coltrane.ui.browser.result.document.name";
 
     public static final String RESULT_ID = DocumentsContract.Document.COLUMN_DOCUMENT_ID;
 
@@ -279,7 +280,8 @@ public class DocumentBrowserActivity extends Activity implements
         Intent i = new Intent();
         i.setDataAndType(document.getUri(), document.getMimeType());
         i.putExtra(EXTRA_PROVIDER, mRoot.getProvider().getId());
-        i.putExtra(EXTRA_DOCUMENT, document.getId());
+        i.putExtra(EXTRA_DOCUMENT_ID, document.getId());
+        i.putExtra(EXTRA_DOCUMENT_NAME, document.getName());
         setResult(Activity.RESULT_OK, i);
         finish();
     }
