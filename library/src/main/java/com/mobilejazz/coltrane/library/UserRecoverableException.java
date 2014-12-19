@@ -2,7 +2,9 @@ package com.mobilejazz.coltrane.library;
 
 import android.content.Intent;
 
-public class UserRecoverableException extends Exception {
+import java.io.IOException;
+
+public class UserRecoverableException extends IOException {
 
     private Intent pendingAction;
 
