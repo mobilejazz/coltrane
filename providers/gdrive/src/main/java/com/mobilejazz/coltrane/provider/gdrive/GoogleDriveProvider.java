@@ -165,7 +165,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
     public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException, UserRecoverableException {
         try {
             Document d = new Document(mRoots, parentDocumentId);
-            List<File> files = d.getRoot().getDrive().files().list().setQ("'" + d.getDriveId() + "'" + " in parents and trashed=false").execute().getItems();
+            List<File> files = d.getRoot().getDrive().files().list().setQ("'" + d.getDriveId() + "'" + " in parents and trashed=false and not (mimeType != 'application/vnd.google-apps.folder' and mimeType contains 'application/vnd.google-apps')").execute().getItems();
             return new FileCursor(d.getRoot(), files);
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
