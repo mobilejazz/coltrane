@@ -35,6 +35,8 @@ public final class DocumentsContract {
         private Document() {
         }
 
+        public static final String COLUMN_DOCUMENT_URI = "document_uri";
+
         /**
          * Unique ID of a document. This ID is both provided by and interpreted
          * by a {@link com.mobilejazz.coltrane.library.DocumentsProvider}, and should be treated as an opaque

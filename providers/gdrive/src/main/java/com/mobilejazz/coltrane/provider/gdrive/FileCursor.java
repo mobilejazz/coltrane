@@ -13,6 +13,7 @@ public class FileCursor extends MatrixCursor {
 
     private static final String[] sColumnNames = new String[] {
             BaseColumns._ID,
+            Document.COLUMN_DOCUMENT_URI,
             Document.COLUMN_DOCUMENT_ID,
             Document.COLUMN_MIME_TYPE,
             Document.COLUMN_DISPLAY_NAME,
@@ -40,17 +41,18 @@ public class FileCursor extends MatrixCursor {
                 mimeType = Document.MIME_TYPE_DIR;
             }
 
-            addRow(new Object[] {
-                    index++,
-                    GoogleDriveProvider.Document.getDocumentId(root, f.getId()),
-                    mimeType,
-                    f.getTitle(),
-                    f.getDescription(),
-                    f.getModifiedDate().getValue(),
-                    0,
-                    flags,
-                    f.getFileSize()
-            });
+            RowBuilder row = newRow();
+
+            row.add(BaseColumns._ID, index++);
+            row.add(Document.COLUMN_DOCUMENT_URI, f.getDownloadUrl());
+            row.add(Document.COLUMN_DOCUMENT_ID, GoogleDriveProvider.Document.getDocumentId(root, f.getId()));
+            row.add(Document.COLUMN_MIME_TYPE, mimeType);
+            row.add(Document.COLUMN_DISPLAY_NAME, f.getTitle());
+            row.add(Document.COLUMN_SUMMARY, f.getDescription());
+            row.add(Document.COLUMN_LAST_MODIFIED, f.getModifiedDate().getValue());
+            row.add(Document.COLUMN_ICON, 0);
+            row.add(Document.COLUMN_FLAGS, flags);
+            row.add(Document.COLUMN_SIZE, f.getFileSize());
         }
     }
 }

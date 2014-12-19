@@ -41,7 +41,8 @@ public class FileSystemProvider extends DocumentsProvider {
             DocumentsContract.Document.COLUMN_DOCUMENT_ID,
             DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_FLAGS, DocumentsContract.Document.COLUMN_MIME_TYPE,
             DocumentsContract.Document.COLUMN_SIZE,
-            DocumentsContract.Document.COLUMN_LAST_MODIFIED
+            DocumentsContract.Document.COLUMN_LAST_MODIFIED,
+            DocumentsContract.Document.COLUMN_DOCUMENT_URI
     };
 
     public FileSystemProvider(Context context) {
@@ -213,15 +214,11 @@ public class FileSystemProvider extends DocumentsProvider {
         row.add(DocumentsContract.Document.COLUMN_SIZE, file.length());
         // These columns are optional
         row.add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, file.lastModified());
+        row.add(DocumentsContract.Document.COLUMN_DOCUMENT_URI, Uri.fromFile(file).toString());
         // Document.COLUMN_ICON can be a resource id identifying a custom icon.
         // The system provides default icons
         // based on mime type
         // Document.COLUMN_SUMMARY is optional additional information about the
         // file
-    }
-
-    @Override
-    public Uri getContentUri(String documentId) {
-        return Uri.fromFile(new File(documentId));
     }
 }

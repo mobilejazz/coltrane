@@ -66,8 +66,6 @@ public abstract class DocumentsProvider {
         throw new UnsupportedOperationException("Search not supported");
     }
 
-    public abstract Uri getContentUri(String documentId);
-
     public boolean onCreate() {
         return true;
     }

@@ -203,11 +203,6 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
     }
 
     @Override
-    public Uri getContentUri(String documentId) {
-        return null;
-    }
-
-    @Override
     public void onConnected(Bundle bundle) {
 
     }
