@@ -67,7 +67,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
 
     private View mPendingActionView;
     private Button mExecutePendingAction;
-    private View mEmptyTextView;
+    private TextView mEmptyTextView;
     private View mProgressContainer;
     private View mListContainer;
 
@@ -125,7 +125,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
                 startActivityForResult(mPendingAction, REQUEST_RESOLVE_PROVIDER_ISSUE);
             }
         });
-        mEmptyTextView = view.findViewById(R.id.empty);
+        mEmptyTextView = (TextView)view.findViewById(R.id.empty);
         mProgressContainer = view.findViewById(R.id.progressContainer);
         mListContainer = view.findViewById(R.id.listContainer);
 
@@ -179,6 +179,11 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
         if (mPendingAction != null) {
             changeEmptyView(mPendingActionView);
             startActivityForResult(mPendingAction, REQUEST_RESOLVE_PROVIDER_ISSUE);
+        } else if (data == null) {
+            // network error:
+            mEmptyTextView.setText(R.string.network_error);
+        } else {
+            mEmptyTextView.setText(R.string.empty_directory);
         }
 
     }

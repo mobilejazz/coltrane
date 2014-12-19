@@ -68,7 +68,7 @@ public class DocumentLoader extends AsyncTaskLoader<Cursor> {
         try {
             return mProvider.queryChildDocuments(mParentDocumentId, null, null);
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            return null;
         } catch (UserRecoverableException e) {
             mPendingAction = e.getPendingAction();
             return null;
