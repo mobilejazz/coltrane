@@ -154,7 +154,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             for (Account a : accounts) {
                 credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
                 credential.setSelectedAccountName(a.name);
-                Drive service = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), credential).build();
+                Drive service = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), credential).setApplicationName(getContext().getApplicationInfo().name).build();
                 mRoots.put(a.name, new GDriveRoot(this, a, service));
             }
         }
