@@ -32,37 +32,37 @@ public abstract class DocumentsProvider {
         mContext = context;
     }
 
-    public abstract Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException;
+    public abstract Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException, UserRecoverableException;
 
-    public abstract Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException;
+    public abstract Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException, UserRecoverableException;
 
-    public abstract ParcelFileDescriptor openDocument(String documentId, String mode, CancellationSignal signal) throws FileNotFoundException;
+    public abstract ParcelFileDescriptor openDocument(String documentId, String mode, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException;
 
     public abstract String getId();
 
     public abstract Collection<? extends Root> getRoots() throws FileNotFoundException;
 
-    public AssetFileDescriptor openDocumentThumbnail(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException {
+    public AssetFileDescriptor openDocumentThumbnail(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Document thumbnails not supported");
     }
 
-    public String createDocument(String parentDocumentId, String mimeType, String displayName) throws FileNotFoundException {
+    public String createDocument(String parentDocumentId, String mimeType, String displayName) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Create not supported");
     }
 
-    public String renameDocument(String documentId, String displayName) throws FileNotFoundException {
+    public String renameDocument(String documentId, String displayName) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Rename not supported");
     }
 
-    public void deleteDocument(String documentId) throws FileNotFoundException {
+    public void deleteDocument(String documentId) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Delete not supported");
     }
 
-    public Cursor queryRecentDocuments(String rootId, String[] projection) throws FileNotFoundException {
+    public Cursor queryRecentDocuments(String rootId, String[] projection) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Recent documents not supported");
     }
 
-    public Cursor querySearchDocuments(String rootId, String query, String[] projection) throws FileNotFoundException {
+    public Cursor querySearchDocuments(String rootId, String query, String[] projection) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Search not supported");
     }
 

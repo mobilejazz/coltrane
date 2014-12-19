@@ -60,8 +60,7 @@ public class FileSystemProvider extends DocumentsProvider {
                 getContext().getString(R.string.internal_storage),
                 R.drawable.ic_provider,
                 homeDir.getFreeSpace(),
-                DocumentsContract.Root.FLAG_LOCAL_ONLY | DocumentsContract.Root.FLAG_SUPPORTS_CREATE,
-                null);
+                DocumentsContract.Root.FLAG_LOCAL_ONLY | DocumentsContract.Root.FLAG_SUPPORTS_CREATE);
 
         return Collections.singletonList(root);
     }

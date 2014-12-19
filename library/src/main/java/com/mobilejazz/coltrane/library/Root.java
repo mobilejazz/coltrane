@@ -7,7 +7,6 @@ import android.content.Intent;
 public class Root {
 
     private DocumentsProvider provider;
-    private Intent pendingAction;
 
     private String id;
     private String documentId;
@@ -18,7 +17,7 @@ public class Root {
 
     public Root() {}
 
-    public Root(DocumentsProvider provider, String id, String documentId, String title, int icon, long availableBytes, int flags, Intent pendingAction) {
+    public Root(DocumentsProvider provider, String id, String documentId, String title, int icon, long availableBytes, int flags) {
         this.provider = provider;
         this.id = id;
         this.documentId = documentId;
@@ -26,7 +25,6 @@ public class Root {
         this.icon = icon;
         this.availableBytes = availableBytes;
         this.flags = flags;
-        this.pendingAction = pendingAction;
     }
 
     @Override
@@ -72,20 +70,8 @@ public class Root {
         return flags;
     }
 
-    public boolean isConnected() {
-        return pendingAction == null;
-    }
-
-    public Intent getPendingAction() {
-        return pendingAction;
-    }
-
     public void setProvider(DocumentsProvider provider) {
         this.provider = provider;
-    }
-
-    public void setPendingAction(Intent pendingAction) {
-        this.pendingAction = pendingAction;
     }
 
     public void setId(String id) {

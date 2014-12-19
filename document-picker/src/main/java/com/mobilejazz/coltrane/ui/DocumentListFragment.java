@@ -19,6 +19,7 @@ package com.mobilejazz.coltrane.ui;
 import android.app.Activity;
 import android.app.ListFragment;
 import android.app.LoaderManager;
+import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -35,6 +36,8 @@ import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 public class DocumentListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String PROVIDER = "com.mobilejazz.coltrane.ui.browser.fragment.provider";
+
+    public static final int REQUEST_RESOLVE_PROVIDER_ISSUE = 35092;
 
     /**
      * Interface to listen for events.
@@ -128,6 +131,27 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
             setListShown(true);
         else
             setListShownNoAnimation(true);
+
+        Intent pendingAction = ((DocumentLoader)loader).getPendingAction();
+        if (pendingAction != null) {
+            startActivityForResult(pendingAction, REQUEST_RESOLVE_PROVIDER_ISSUE);
+        }
+
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_RESOLVE_PROVIDER_ISSUE:
+                if (resultCode == Activity.RESULT_OK) {
+                    // a provider request has been resolved
+                    getLoaderManager().restartLoader(LOADER_ID, null, this);
+                } else {
+                    // TODO
+                }
+                break;
+        }
     }
 
     @Override

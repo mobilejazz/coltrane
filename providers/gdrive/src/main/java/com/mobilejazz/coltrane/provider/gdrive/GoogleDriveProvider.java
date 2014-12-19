@@ -60,8 +60,8 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             setIcon(R.drawable.ic_provider_gdrive);
             setProvider(provider);
 
-            // check connection:
-            update();
+            mRootDocument = new Document(this, ROOT_FOLDER);
+            setDocumentId(mRootDocument.getDocumentId());
         }
 
         public Account getAccount() {
@@ -81,11 +81,6 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             try {
                 About about = mDrive.about().get().execute();
                 setAvailableBytes(about.getQuotaBytesTotal());
-                mRootDocument = new Document(this, about.getRootFolderId());
-                setDocumentId(mRootDocument.getDocumentId());
-                setPendingAction(null);
-            } catch (UserRecoverableAuthIOException e) {
-                setPendingAction(e.getIntent());
             } catch (IOException e) {
                 e.printStackTrace();
             }

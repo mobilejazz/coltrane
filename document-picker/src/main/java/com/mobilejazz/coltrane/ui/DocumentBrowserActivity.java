@@ -16,20 +16,16 @@
 
 package com.mobilejazz.coltrane.ui;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.LoaderManager;
-import android.app.PendingIntent;
-import android.content.AsyncTaskLoader;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.Loader;
 import android.content.res.Configuration;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.widget.DrawerLayout;
@@ -43,20 +39,16 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 import com.mobilejazz.coltrane.library.utils.AsyncLoader;
 import com.mobilejazz.coltrane.library.utils.DocumentCursor;
-import com.mobilejazz.coltrane.library.utils.RootCursor;
 
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import timber.log.Timber;
 
 /**
  * Main Activity that handles the FileListFragments
@@ -73,8 +65,6 @@ public class DocumentBrowserActivity extends Activity implements
     public static final String EXTRA_DOCUMENT = "com.mobilejazz.coltrane.ui.browser.result.document";
 
     public static final String RESULT_ID = DocumentsContract.Document.COLUMN_DOCUMENT_ID;
-
-    public static final int REQUEST_RESOLVE_PROVIDER_ISSUE = 35092;
 
     private FragmentManager mFragmentManager;
     private BroadcastReceiver mStorageListener = new BroadcastReceiver() {
@@ -122,8 +112,6 @@ public class DocumentBrowserActivity extends Activity implements
     private Bundle mSavedInstanceState;
 
     private Handler mHandler;
-
-    private Integer mPendingPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -247,44 +235,13 @@ public class DocumentBrowserActivity extends Activity implements
     private void selectItem(final int position) {
         final Root root = (Root)mDrawerList.getItemAtPosition(position);
 
-        if (root.isConnected()) {
-            if (root != mRoot) {
-                replaceFragment(root, null, root.getTitle());
-            }
-
-            // Highlight the selected item, update the title, and close the drawer
-            mDrawerList.setItemChecked(position, true);
-            mDrawerLayout.closeDrawers();
-        } else {
-            mPendingPosition = position;
-            startActivityForResult(root.getPendingAction(), REQUEST_RESOLVE_PROVIDER_ISSUE);
+        if (root != mRoot) {
+            replaceFragment(root, null, root.getTitle());
         }
-    }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case REQUEST_RESOLVE_PROVIDER_ISSUE:
-                if (mPendingPosition != null) {
-                    final Root root = (Root) mDrawerList.getItemAtPosition(mPendingPosition);
-                    new AsyncTask<Void, Void, Void>() {
-
-                        @Override
-                        protected Void doInBackground(Void... params) {
-                            root.update();
-                            return null;
-                        }
-
-                        @Override
-                        protected void onPostExecute(Void aVoid) {
-                            selectItem(mPendingPosition);
-                        }
-
-                    }.execute();
-                }
-                break;
-        }
+        // Highlight the selected item, update the title, and close the drawer
+        mDrawerList.setItemChecked(position, true);
+        mDrawerLayout.closeDrawers();
     }
 
     private void changeProvider(Root root, String documentId) {
