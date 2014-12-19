@@ -3,6 +3,7 @@ package com.mobilejazz.coltrane.library.utils;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.net.Uri;
+import android.text.TextUtils;
 
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract.Document;
 
@@ -56,7 +57,12 @@ public class DocumentCursor extends CursorWrapper {
     }
 
     public Uri getUri() {
-        return Uri.parse(getString(mUri));
+        String s = getString(mUri);
+        if (!TextUtils.isEmpty(s)) {
+            return Uri.parse(s);
+        } else {
+            return null;
+        }
     }
 
     public String getId() {
