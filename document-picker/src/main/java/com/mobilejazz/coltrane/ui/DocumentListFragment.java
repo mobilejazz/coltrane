@@ -175,10 +175,14 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
         else
             setListShownNoAnimation(true);
 
-        mPendingAction = ((DocumentLoader)loader).getPendingAction();
-        if (mPendingAction != null) {
-            changeEmptyView(mPendingActionView);
-            startActivityForResult(mPendingAction, REQUEST_RESOLVE_PROVIDER_ISSUE);
+
+        Intent pendingAction = ((DocumentLoader)loader).getPendingAction();
+        if (pendingAction != null) {
+            if (mPendingAction == null) {
+                mPendingAction = pendingAction;
+                changeEmptyView(mPendingActionView);
+                startActivityForResult(mPendingAction, REQUEST_RESOLVE_PROVIDER_ISSUE);
+            }
         } else if (data == null) {
             // network error:
             mEmptyTextView.setText(R.string.network_error);
@@ -195,6 +199,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
             case REQUEST_RESOLVE_PROVIDER_ISSUE:
                 if (resultCode == Activity.RESULT_OK) {
                     // a provider request has been resolved
+                    mPendingAction = null;
                     getLoaderManager().restartLoader(LOADER_ID, null, this);
                 } else {
                     // TODO
