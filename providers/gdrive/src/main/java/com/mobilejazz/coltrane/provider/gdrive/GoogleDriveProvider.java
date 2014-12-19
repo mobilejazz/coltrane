@@ -16,6 +16,8 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpResponse;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.About;
@@ -23,6 +25,7 @@ import com.google.api.services.drive.model.File;
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
+import com.mobilejazz.coltrane.library.utils.ParcelFileDescriptorUtil;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -194,7 +197,16 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
 
     @Override
     public ParcelFileDescriptor openDocument(String documentId, String mode, CancellationSignal signal) throws FileNotFoundException {
-        return null;
+        try {
+            Document d = new Document(mRoots, documentId);
+            File file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
+            HttpResponse resp =
+                    d.getRoot().getDrive().getRequestFactory().buildGetRequest(new GenericUrl(file.getDownloadUrl()))
+                            .execute();
+            return ParcelFileDescriptorUtil.pipeFrom(resp.getContent(), null);
+        } catch (IOException e) {
+            throw new FileNotFoundException(e.getLocalizedMessage());
+        }
     }
 
     @Override
