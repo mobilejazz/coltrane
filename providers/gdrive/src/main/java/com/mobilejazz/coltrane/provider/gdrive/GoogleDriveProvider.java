@@ -25,6 +25,7 @@ import com.google.api.services.drive.model.File;
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
+import com.mobilejazz.coltrane.library.UserRecoverableException;
 import com.mobilejazz.coltrane.library.utils.ParcelFileDescriptorUtil;
 
 import java.io.FileNotFoundException;
@@ -50,7 +51,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
 
         private Document mRootDocument;
 
-        public GDriveRoot(GoogleDriveProvider provider, Account account, Drive drive) throws IOException {
+        public GDriveRoot(GoogleDriveProvider provider, Account account, Drive drive) {
             mAccount = account;
             mDrive = drive;
 
@@ -145,54 +146,49 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
 
     @Override
     public Collection<? extends Root> getRoots() throws FileNotFoundException {
-        try {
-            if (mRoots == null) {
-                mRoots = new TreeMap<String, GDriveRoot>();
+        if (mRoots == null) {
+            mRoots = new TreeMap<String, GDriveRoot>();
 
-                GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
-                Account[] accounts = credential.getAllAccounts(); //AccountManager.get(getContext()).getAccountsByType("com.google");
-                for (Account a : accounts) {
-                    credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
-                    credential.setSelectedAccountName(a.name);
-                    Drive service = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), credential).build();
-                    try {
-                        mRoots.put(a.name, new GDriveRoot(this, a, service));
-                    } catch (UserRecoverableAuthIOException e) {
-                        mRoots.put(a.name, new GDriveRoot(this, a, null));
-                    }
-                }
+            GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
+            Account[] accounts = credential.getAllAccounts(); //AccountManager.get(getContext()).getAccountsByType("com.google");
+            for (Account a : accounts) {
+                credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
+                credential.setSelectedAccountName(a.name);
+                Drive service = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), credential).build();
+                mRoots.put(a.name, new GDriveRoot(this, a, service));
             }
-            return mRoots.values();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new FileNotFoundException(e.getLocalizedMessage());
         }
+        return mRoots.values();
     }
 
     @Override
-    public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException {
+    public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException, UserRecoverableException {
         try {
             Document d = new Document(mRoots, parentDocumentId);
             List<File> files = d.getRoot().getDrive().files().list().setQ("'" + d.getDriveId() + "'" + " in parents and trashed=false").execute().getItems();
             return new FileCursor(d.getRoot(), files);
+        } catch (UserRecoverableAuthIOException e) {
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
         } catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
     }
 
     @Override
-    public Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException {
+    public Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException, UserRecoverableException {
         try {
             Document d = new Document(mRoots, documentId);
             File file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
             return new FileCursor(d.getRoot(), Collections.singletonList(file));
-        } catch (IOException e) {
+        } catch (UserRecoverableAuthIOException e) {
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+        }  catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
     }
 
     @Override
-    public ParcelFileDescriptor openDocument(String documentId, String mode, CancellationSignal signal) throws FileNotFoundException {
+    public ParcelFileDescriptor openDocument(String documentId, String mode, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
         try {
             Document d = new Document(mRoots, documentId);
             File file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
@@ -200,7 +196,9 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                     d.getRoot().getDrive().getRequestFactory().buildGetRequest(new GenericUrl(file.getDownloadUrl()))
                             .execute();
             return ParcelFileDescriptorUtil.pipeFrom(resp.getContent(), null);
-        } catch (IOException e) {
+        } catch (UserRecoverableAuthIOException e) {
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+        }  catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
     }

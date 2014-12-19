@@ -8,6 +8,7 @@ public class UserRecoverableException extends Exception {
 
     public UserRecoverableException(String message, Throwable cause, Intent pendingAction) {
         super(message, cause);
+        this.pendingAction = pendingAction;
     }
 
     public Intent getPendingAction() {

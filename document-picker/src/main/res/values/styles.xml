@@ -58,4 +58,9 @@
         <!--<item name="android:listSelector">@android:color/holo_blue_dark</item>-->
     </style>
 
+    <style name="Lollipop.Button" parent="android:style/Widget.Holo.Button">
+        <item name="android:background">@drawable/button_background</item>
+        <item name="android:textColor">?android:attr/textColorHighlightInverse</item>
+    </style>
+
 </resources>

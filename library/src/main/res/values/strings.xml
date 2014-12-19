@@ -26,4 +26,7 @@
     <string name="choose_file">Select a file</string>
     <string name="error_selecting_file">Error selecting File</string>
     <string name="internal_storage" translatable="false">Internal storage</string>
+    <string name="pending_action">In order to access this provider you need to complete a pending action.</string>
+    <string name="execute_pending_action">Complete</string>
+    <string name="loading">Loading&#8230;</string>
 </resources>
