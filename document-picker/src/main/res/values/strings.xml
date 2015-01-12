@@ -3,4 +3,5 @@
     <string name="open_from">Open from</string>
     <string name="drawer_open">Open Provider Selection</string>
     <string name="drawer_close">Close Provider Selection</string>
+    <string name="no_provider">No Provider Available</string>
 </resources>
