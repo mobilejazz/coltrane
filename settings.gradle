@@ -1,2 +1,3 @@
-include ':library', ':filesystem', ':document-picker', ':example'
+include ':library', ':filesystem', ':gdrive', ':document-picker', ':example', ':gdrive'
 project(':filesystem').projectDir = new File('providers/filesystem')
+project(':gdrive').projectDir = new File('providers/gdrive')

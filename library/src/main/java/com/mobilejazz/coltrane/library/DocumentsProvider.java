@@ -1,21 +1,15 @@
 package com.mobilejazz.coltrane.library;
 
-import android.content.ContentResolver;
+import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.graphics.Point;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
 
-import com.mobilejazz.coltrane.library.utils.RootCursor;
-
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-
-import timber.log.Timber;
+import java.util.Collection;
 
 public abstract class DocumentsProvider {
 
@@ -28,55 +22,52 @@ public abstract class DocumentsProvider {
     private static final int MATCH_DOCUMENT_TREE = 7;
     private static final int MATCH_CHILDREN_TREE = 8;
 
-    public abstract Cursor queryRoots(String[] projection) throws FileNotFoundException;
+    private Context mContext;
 
-    public abstract Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException;
+    public Context getContext() {
+        return mContext;
+    }
 
-    public abstract Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException;
+    public DocumentsProvider(Context context) {
+        mContext = context;
+    }
 
-    public abstract ParcelFileDescriptor openDocument(String documentId, String mode, CancellationSignal signal) throws FileNotFoundException;
+    public abstract Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException, UserRecoverableException;
+
+    public abstract Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException, UserRecoverableException;
+
+    public abstract ParcelFileDescriptor openDocument(String documentId, String mode, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException;
 
     public abstract String getId();
 
-    public List<Root> getRoots() {
-        List<Root> result = new ArrayList<Root>();
-        try {
-            RootCursor c = new RootCursor(queryRoots(null));
-            c.moveToFirst();
-            while (!c.isAfterLast()) {
-                result.add(new Root(this, c.getId(), c.getDocumentId(), c.getTitle(), c.getIcon()));
-                c.moveToNext();
-            }
-        } catch (FileNotFoundException e) {
-            Timber.e(e, e.getLocalizedMessage());
-        }
-        return result;
-    }
+    public abstract Collection<? extends Root> getRoots() throws FileNotFoundException;
 
-    public AssetFileDescriptor openDocumentThumbnail(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException {
+    public AssetFileDescriptor openDocumentThumbnail(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Document thumbnails not supported");
     }
 
-    public String createDocument(String parentDocumentId, String mimeType, String displayName) throws FileNotFoundException {
+    public String createDocument(String parentDocumentId, String mimeType, String displayName) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Create not supported");
     }
 
-    public String renameDocument(String documentId, String displayName) throws FileNotFoundException {
+    public String renameDocument(String documentId, String displayName) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Rename not supported");
     }
 
-    public void deleteDocument(String documentId) throws FileNotFoundException {
+    public void deleteDocument(String documentId) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Delete not supported");
     }
 
-    public Cursor queryRecentDocuments(String rootId, String[] projection) throws FileNotFoundException {
+    public Cursor queryRecentDocuments(String rootId, String[] projection) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Recent documents not supported");
     }
 
-    public Cursor querySearchDocuments(String rootId, String query, String[] projection) throws FileNotFoundException {
+    public Cursor querySearchDocuments(String rootId, String query, String[] projection) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Search not supported");
     }
 
-    public abstract Uri getContentUri(String documentId);
+    public boolean onCreate() {
+        return true;
+    }
 
 }

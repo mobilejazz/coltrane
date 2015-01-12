@@ -9,5 +9,7 @@
     <color name="native.lollipop.text.normal">#212121</color>
     <color name="native.lollipop.text.selected">#ffffff</color>
 
+    <color name="native.lollipop.button.normal">#46f</color>
+    <color name="native.lollipop.button.pressed">#44e</color>
 
 </resources>

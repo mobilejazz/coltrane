@@ -18,9 +18,11 @@ package com.mobilejazz.coltrane.ui;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
+import com.mobilejazz.coltrane.library.UserRecoverableException;
 
 import java.io.FileNotFoundException;
 
@@ -34,6 +36,8 @@ public class DocumentLoader extends AsyncTaskLoader<Cursor> {
 
     private DocumentsProvider mProvider;
 	private String mParentDocumentId;
+
+    private Intent mPendingAction;
 
 	public DocumentLoader(Context context, DocumentsProvider provider, String parentDocumentId) {
 		super(context);
@@ -64,8 +68,15 @@ public class DocumentLoader extends AsyncTaskLoader<Cursor> {
         try {
             return mProvider.queryChildDocuments(mParentDocumentId, null, null);
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            return null;
+        } catch (UserRecoverableException e) {
+            mPendingAction = e.getPendingAction();
+            return null;
         }
+    }
+
+    public Intent getPendingAction() {
+        return mPendingAction;
     }
 
 }

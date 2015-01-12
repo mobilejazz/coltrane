@@ -2,11 +2,14 @@ package com.mobilejazz.coltrane.library.utils;
 
 import android.database.Cursor;
 import android.database.CursorWrapper;
+import android.net.Uri;
+import android.text.TextUtils;
 
-import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
+import com.mobilejazz.coltrane.library.compatibility.DocumentsContract.Document;
 
 public class DocumentCursor extends CursorWrapper {
 
+    private int mUri;
     private int mId;
     private int mMimeType;
     private int mName;
@@ -18,14 +21,15 @@ public class DocumentCursor extends CursorWrapper {
 
     public DocumentCursor(Cursor c) {
         super(c);
-        mId = c.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
-        mMimeType = c.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE);
-        mName = c.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
-        mSummary = c.getColumnIndex(DocumentsContract.Document.COLUMN_SUMMARY);
-        mLastModified = c.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED);
-        mIcon = c.getColumnIndex(DocumentsContract.Document.COLUMN_ICON);
-        mFlags = c.getColumnIndex(DocumentsContract.Document.COLUMN_FLAGS);
-        mSize = c.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE);
+        mUri = c.getColumnIndex(Document.COLUMN_DOCUMENT_URI);
+        mId = c.getColumnIndex(Document.COLUMN_DOCUMENT_ID);
+        mMimeType = c.getColumnIndex(Document.COLUMN_MIME_TYPE);
+        mName = c.getColumnIndex(Document.COLUMN_DISPLAY_NAME);
+        mSummary = c.getColumnIndex(Document.COLUMN_SUMMARY);
+        mLastModified = c.getColumnIndex(Document.COLUMN_LAST_MODIFIED);
+        mIcon = c.getColumnIndex(Document.COLUMN_ICON);
+        mFlags = c.getColumnIndex(Document.COLUMN_FLAGS);
+        mSize = c.getColumnIndex(Document.COLUMN_SIZE);
     }
 
     private String getStringField(int index) {
@@ -47,6 +51,15 @@ public class DocumentCursor extends CursorWrapper {
     private Integer getIntField(int index) {
         if (index >= 0) {
             return getWrappedCursor().getInt(index);
+        } else {
+            return null;
+        }
+    }
+
+    public Uri getUri() {
+        String s = getString(mUri);
+        if (!TextUtils.isEmpty(s)) {
+            return Uri.parse(s);
         } else {
             return null;
         }
@@ -85,7 +98,7 @@ public class DocumentCursor extends CursorWrapper {
     }
 
     public boolean isDirectory() {
-        return getMimeType().equals(DocumentsContract.Document.MIME_TYPE_DIR);
+        return getMimeType().equals(Document.MIME_TYPE_DIR);
     }
 
 }

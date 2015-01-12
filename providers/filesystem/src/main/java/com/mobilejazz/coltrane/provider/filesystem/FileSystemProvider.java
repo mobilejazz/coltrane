@@ -10,10 +10,12 @@ import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
+import android.provider.BaseColumns;
 import android.webkit.MimeTypeMap;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
+import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 import com.mobilejazz.coltrane.library.compatibility.MatrixCursor;
 
@@ -21,65 +23,46 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 import timber.log.Timber;
 
 public class FileSystemProvider extends DocumentsProvider {
 
-    private final static String _ID = "_id";
-
     public static final String ID = "com.mobilejazz.coltrane.provider.filesystem";
 
-    /**
-     * Default root projection: everything but Root.COLUMN_MIME_TYPES
-     */
-    private final static String[] DEFAULT_ROOT_PROJECTION = new String[] {
-            _ID,
-            DocumentsContract.Root.COLUMN_ROOT_ID,
-            DocumentsContract.Root.COLUMN_FLAGS, DocumentsContract.Root.COLUMN_TITLE, DocumentsContract.Root.COLUMN_DOCUMENT_ID, DocumentsContract.Root.COLUMN_ICON,
-            DocumentsContract.Root.COLUMN_AVAILABLE_BYTES
-    };
     /**
      * Default document projection: everything but Document.COLUMN_ICON and
      * Document.COLUMN_SUMMARY
      */
     private final static String[] DEFAULT_DOCUMENT_PROJECTION = new String[] {
-            _ID,
+            BaseColumns._ID,
             DocumentsContract.Document.COLUMN_DOCUMENT_ID,
             DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_FLAGS, DocumentsContract.Document.COLUMN_MIME_TYPE,
             DocumentsContract.Document.COLUMN_SIZE,
-            DocumentsContract.Document.COLUMN_LAST_MODIFIED
+            DocumentsContract.Document.COLUMN_LAST_MODIFIED,
+            DocumentsContract.Document.COLUMN_DOCUMENT_URI
     };
 
-    protected Context mContext;
-
     public FileSystemProvider(Context context) {
-        this.mContext = context;
+        super(context);
     }
 
     @Override
-    public Cursor queryRoots(String[] projection) throws FileNotFoundException {
-        // Create a cursor with either the requested fields, or the default
-        // projection if "projection" is null.
-        final MatrixCursor result = new MatrixCursor(projection != null ? projection
-                : DEFAULT_ROOT_PROJECTION);
+    public List<Root> getRoots() throws FileNotFoundException {
         // Add Home directory
         File homeDir = Environment.getExternalStorageDirectory();
-        final MatrixCursor.RowBuilder row = result.newRow();
-        // These columns are required
-        row.add(_ID, 0L); // for supporting CursorAdapter
-        row.add(DocumentsContract.Root.COLUMN_ROOT_ID, homeDir.getAbsolutePath());
-        row.add(DocumentsContract.Root.COLUMN_DOCUMENT_ID, homeDir.getAbsolutePath());
-        row.add(DocumentsContract.Root.COLUMN_TITLE, mContext.getString(R.string.internal_storage));
-        row.add(DocumentsContract.Root.COLUMN_FLAGS, DocumentsContract.Root.FLAG_LOCAL_ONLY | DocumentsContract.Root.FLAG_SUPPORTS_CREATE);
-        row.add(DocumentsContract.Root.COLUMN_ICON, R.drawable.ic_provider);
-        // These columns are optional
-        row.add(DocumentsContract.Root.COLUMN_AVAILABLE_BYTES, homeDir.getFreeSpace());
-        // Root.COLUMN_MIME_TYPE is another optional column and useful if you
-        // have multiple roots with different
-        // types of mime types (roots that don't match the requested mime type
-        // are automatically hidden)
-        return result;
+
+        Root root = new Root(this,
+                homeDir.getAbsolutePath(),
+                homeDir.getAbsolutePath(),
+                getContext().getString(R.string.internal_storage),
+                R.drawable.ic_provider,
+                homeDir.getFreeSpace(),
+                DocumentsContract.Root.FLAG_LOCAL_ONLY | DocumentsContract.Root.FLAG_SUPPORTS_CREATE);
+
+        return Collections.singletonList(root);
     }
 
     @Override
@@ -149,7 +132,7 @@ public class FileSystemProvider extends DocumentsProvider {
         File tempFile = null;
         FileOutputStream out = null;
         try {
-            tempFile = File.createTempFile("thumbnail", null, mContext.getCacheDir());
+            tempFile = File.createTempFile("thumbnail", null, getContext().getCacheDir());
             out = new FileOutputStream(tempFile);
             bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
         } catch (IOException e) {
@@ -213,7 +196,7 @@ public class FileSystemProvider extends DocumentsProvider {
             throws FileNotFoundException {
         final MatrixCursor.RowBuilder row = result.newRow();
         // These columns are required
-        row.add(_ID, id); // for supporting CursorAdapter
+        row.add(BaseColumns._ID, id); // for supporting CursorAdapter
         row.add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, file.getAbsolutePath());
         row.add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, file.getName());
         String mimeType = getDocumentType(file.getAbsolutePath());
@@ -230,15 +213,11 @@ public class FileSystemProvider extends DocumentsProvider {
         row.add(DocumentsContract.Document.COLUMN_SIZE, file.length());
         // These columns are optional
         row.add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, file.lastModified());
+        row.add(DocumentsContract.Document.COLUMN_DOCUMENT_URI, Uri.fromFile(file).toString());
         // Document.COLUMN_ICON can be a resource id identifying a custom icon.
         // The system provides default icons
         // based on mime type
         // Document.COLUMN_SUMMARY is optional additional information about the
         // file
-    }
-
-    @Override
-    public Uri getContentUri(String documentId) {
-        return Uri.fromFile(new File(documentId));
     }
 }

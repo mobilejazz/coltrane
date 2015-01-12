@@ -29,11 +29,12 @@ public class BackStackAdapter extends BaseAdapter implements FragmentManager.OnB
 
         mFragmentManager.addOnBackStackChangedListener(this);
 
-        mHeader = "<Root>"; // default header
+        mHeader = "Loading..."; // default header
     }
 
     public void setHeader(String header) {
         mHeader = header;
+        notifyDataSetChanged();
     }
 
     public String getHeader() {
