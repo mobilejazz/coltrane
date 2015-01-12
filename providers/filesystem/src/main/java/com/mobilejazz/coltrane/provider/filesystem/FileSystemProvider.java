@@ -54,15 +54,23 @@ public class FileSystemProvider extends DocumentsProvider {
         // Add Home directory
         File homeDir = Environment.getExternalStorageDirectory();
 
-        Root root = new Root(this,
-                homeDir.getAbsolutePath(),
-                homeDir.getAbsolutePath(),
-                getContext().getString(R.string.internal_storage),
-                R.drawable.ic_provider,
-                homeDir.getFreeSpace(),
-                DocumentsContract.Root.FLAG_LOCAL_ONLY | DocumentsContract.Root.FLAG_SUPPORTS_CREATE);
+        String state = Environment.getExternalStorageState();
 
-        return Collections.singletonList(root);
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+
+            Root root = new Root(this,
+                    homeDir.getAbsolutePath(),
+                    homeDir.getAbsolutePath(),
+                    getContext().getString(R.string.internal_storage),
+                    R.drawable.ic_provider,
+                    homeDir.getFreeSpace(),
+                    DocumentsContract.Root.FLAG_LOCAL_ONLY | DocumentsContract.Root.FLAG_SUPPORTS_CREATE);
+
+            return Collections.singletonList(root);
+
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     @Override
