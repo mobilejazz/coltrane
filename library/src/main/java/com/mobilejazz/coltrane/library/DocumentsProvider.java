@@ -46,6 +46,10 @@ public abstract class DocumentsProvider {
         throw new UnsupportedOperationException("Document thumbnails not supported");
     }
 
+    public Uri getDocumentThumbnailUri(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
+        throw new UnsupportedOperationException("Document thumbnails not supported");
+    }
+
     public String createDocument(String parentDocumentId, String mimeType, String displayName) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Create not supported");
     }

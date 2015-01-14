@@ -4,20 +4,22 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.BaseColumns;
+import android.util.Base64;
 import android.webkit.MimeTypeMap;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
+import com.mobilejazz.coltrane.library.UserRecoverableException;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 import com.mobilejazz.coltrane.library.compatibility.MatrixCursor;
+import com.mobilejazz.coltrane.library.utils.thumbnail.Thumbnail;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -110,39 +112,23 @@ public class FileSystemProvider extends DocumentsProvider {
         }
     }
 
-    @Override
-    public AssetFileDescriptor openDocumentThumbnail(final String documentId, final Point sizeHint,
-                                                     final CancellationSignal signal) throws FileNotFoundException {
-        // Assume documentId points to an image file. Build a thumbnail no
-        // larger than twice the sizeHint
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(documentId, options);
-        final int targetHeight = 2 * sizeHint.y;
-        final int targetWidth = 2 * sizeHint.x;
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        options.inSampleSize = 1;
-        if (height > targetHeight || width > targetWidth) {
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-            // Calculate the largest inSampleSize value that is a power of 2 and
-            // keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / options.inSampleSize) > targetHeight
-                    || (halfWidth / options.inSampleSize) > targetWidth) {
-                options.inSampleSize *= 2;
-            }
-        }
-        options.inJustDecodeBounds = false;
-        Bitmap bitmap = BitmapFactory.decodeFile(documentId, options);
+    protected String getDocumentThumbnailId(final String documentId, final Point sizeHint) {
+        return Base64.encodeToString(documentId.getBytes(), Base64.URL_SAFE) + "_" + sizeHint.x + "_" + sizeHint.y;
+    }
+
+    protected File getDocumentThumbnailFile(final String documentId, final Point sizeHint) throws FileNotFoundException {
+        String mimeType = getDocumentType(documentId);
+        Bitmap bitmap = Thumbnail.fromFile(documentId, sizeHint, mimeType);
         // Write out the thumbnail to a temporary file
-        File tempFile = null;
         FileOutputStream out = null;
         try {
-            tempFile = File.createTempFile("thumbnail", null, getContext().getCacheDir());
-            out = new FileOutputStream(tempFile);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+            File cacheDir = getContext().getCacheDir();
+            File thumbnail = new File(cacheDir, getDocumentThumbnailId(documentId, sizeHint));
+            if (!thumbnail.exists()) {
+                out = new FileOutputStream(thumbnail);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+            }
+            return thumbnail;
         } catch (IOException e) {
             Timber.e("Error writing thumbnail", e);
             return null;
@@ -154,13 +140,27 @@ public class FileSystemProvider extends DocumentsProvider {
                     Timber.e("Error closing thumbnail", e);
                 }
         }
+    }
+
+    @Override
+    public AssetFileDescriptor openDocumentThumbnail(final String documentId, final Point sizeHint,
+                                                     final CancellationSignal signal) throws FileNotFoundException {
+
         // It appears the Storage Framework UI caches these results quite
         // aggressively so there is little reason to
         // write your own caching layer beyond what you need to return a single
         // AssetFileDescriptor
-        return new AssetFileDescriptor(ParcelFileDescriptor.open(tempFile,
-                ParcelFileDescriptor.MODE_READ_ONLY), 0,
+        return new AssetFileDescriptor(
+                ParcelFileDescriptor.open(
+                    getDocumentThumbnailFile(documentId, sizeHint),
+                    ParcelFileDescriptor.MODE_READ_ONLY
+                ), 0,
                 AssetFileDescriptor.UNKNOWN_LENGTH);
+    }
+
+    @Override
+    public Uri getDocumentThumbnailUri(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
+        return Uri.fromFile(getDocumentThumbnailFile(documentId, sizeHint));
     }
 
     public String getDocumentType(final String documentId) throws FileNotFoundException {
