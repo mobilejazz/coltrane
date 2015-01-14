@@ -1,6 +1,8 @@
 package com.mobilejazz.coltrane.example;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +14,7 @@ import android.os.Bundle;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -43,6 +46,19 @@ public class FileDetailActivity extends Activity {
 
         mImageView = (ImageView)findViewById(R.id.thumbnail);
 
+        mImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Intent view = new Intent(Intent.ACTION_VIEW);
+                    view.setDataAndType(getIntent().getData(), getIntent().getType());
+                    startActivity(view);
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(FileDetailActivity.this, getString(R.string.error_no_activity), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
     }
 
     @Override
@@ -70,7 +86,6 @@ public class FileDetailActivity extends Activity {
                 @Override
                 protected void onPostExecute(Uri uri) {
                     super.onPostExecute(uri);
-                    Toast.makeText(FileDetailActivity.this, uri.toString(), Toast.LENGTH_LONG).show();
                     Picasso.with(FileDetailActivity.this).load(uri).into(mImageView);}
             }.execute();
     }

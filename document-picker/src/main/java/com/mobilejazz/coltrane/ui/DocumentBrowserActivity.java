@@ -39,6 +39,7 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.mobilejazz.coltrane.library.DocumentUriProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
@@ -278,9 +279,13 @@ public class DocumentBrowserActivity extends Activity implements
      */
     private void finishWithResult(DocumentCursor document) {
         Intent i = new Intent();
-        i.setDataAndType(document.getUri(), document.getMimeType());
-        i.putExtra(EXTRA_PROVIDER, mRoot.getProvider().getId());
-        i.putExtra(EXTRA_DOCUMENT_ID, document.getId());
+
+        String providerId = mRoot.getProvider().getId();
+        String documentId = document.getId();
+
+        i.setDataAndType(DocumentUriProvider.getUri(providerId, documentId), document.getMimeType());
+        i.putExtra(EXTRA_PROVIDER, providerId);
+        i.putExtra(EXTRA_DOCUMENT_ID, documentId);
         i.putExtra(EXTRA_DOCUMENT_NAME, document.getName());
         setResult(Activity.RESULT_OK, i);
         finish();
