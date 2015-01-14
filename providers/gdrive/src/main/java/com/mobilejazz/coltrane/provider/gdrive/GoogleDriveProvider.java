@@ -27,10 +27,11 @@ import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
-import com.mobilejazz.coltrane.library.utils.ParcelFileDescriptorUtil;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -190,17 +191,36 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
 
     @Override
     public ParcelFileDescriptor openDocument(String documentId, String mode, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
+        OutputStream out = null;
         try {
             Document d = new Document(mRoots, documentId);
             File file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
             HttpResponse resp =
                     d.getRoot().getDrive().getRequestFactory().buildGetRequest(new GenericUrl(file.getDownloadUrl()))
                             .execute();
-            return ParcelFileDescriptorUtil.pipeFrom(resp.getContent(), null);
+
+            java.io.File downloadedFile = java.io.File.createTempFile(documentId, "_thumbnail", getContext().getCacheDir());
+            out = new FileOutputStream(downloadedFile);
+            resp.download(out);
+
+            final boolean isWrite = (mode.indexOf('w') != -1);
+            if (isWrite) {
+                return ParcelFileDescriptor.open(downloadedFile, ParcelFileDescriptor.MODE_READ_WRITE);
+            } else {
+                return ParcelFileDescriptor.open(downloadedFile, ParcelFileDescriptor.MODE_READ_ONLY);
+            }
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
         }  catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    throw new FileNotFoundException(e.getLocalizedMessage());
+                }
+            }
         }
     }
 
