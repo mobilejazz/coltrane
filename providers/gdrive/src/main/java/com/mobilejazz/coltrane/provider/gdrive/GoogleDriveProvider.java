@@ -5,6 +5,7 @@ import android.accounts.AccountManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CancellationSignal;
@@ -196,6 +197,20 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                     d.getRoot().getDrive().getRequestFactory().buildGetRequest(new GenericUrl(file.getDownloadUrl()))
                             .execute();
             return ParcelFileDescriptorUtil.pipeFrom(resp.getContent(), null);
+        } catch (UserRecoverableAuthIOException e) {
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+        }  catch (IOException e) {
+            throw new FileNotFoundException(e.getLocalizedMessage());
+        }
+    }
+
+    @Override
+    public Uri getDocumentThumbnailUri(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
+        try {
+            Document d = new Document(mRoots, documentId);
+            File file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
+            String thumbnailLink = file.getThumbnailLink();
+            return Uri.parse(thumbnailLink.substring(0, thumbnailLink.length() - 4) + "s" + Math.max(sizeHint.x, sizeHint.y));
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
         }  catch (IOException e) {
