@@ -4,6 +4,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
+
+import java.io.File;
+import java.io.IOException;
+
 public class Thumbnail {
 
     public static Bitmap fromImage(final String path, final Point sizeHint) {
@@ -34,6 +40,15 @@ public class Thumbnail {
 
     public static Bitmap fromPDF(final String path, final Point sizeHint) {
         // TODO: PDFBox
+        try {
+            PDDocument document = PDDocument.loadLegacy(new File(path));
+            document.getPage(1).getCropBox().getWidth();
+            PDFRenderer renderer = new PDFRenderer(document);
+            return renderer.renderImage(1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         return null;
     }
 
