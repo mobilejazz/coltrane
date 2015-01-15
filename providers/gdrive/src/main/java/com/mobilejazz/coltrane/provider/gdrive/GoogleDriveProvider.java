@@ -1,8 +1,6 @@
 package com.mobilejazz.coltrane.provider.gdrive;
 
 import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Point;
@@ -151,7 +149,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             mRoots = new TreeMap<String, GDriveRoot>();
 
             GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
-            Account[] accounts = credential.getAllAccounts(); //AccountManager.get(getContext()).getAccountsByType("com.google");
+            Account[] accounts = credential.getAllAccounts();
             for (Account a : accounts) {
                 credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
                 credential.setSelectedAccountName(a.name);
