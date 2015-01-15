@@ -4,10 +4,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.PDFRenderer;
+import com.sun.pdfview.PDFFile;
+import com.sun.pdfview.PDFPage;
+
+import net.sf.andpdf.nio.ByteBuffer;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 public class Thumbnail {
@@ -39,14 +42,33 @@ public class Thumbnail {
     }
 
     public static Bitmap fromPDF(final String path, final Point sizeHint) {
-        // TODO: PDFBox
+        FileInputStream is = null;
         try {
-            PDDocument document = PDDocument.loadLegacy(new File(path));
-            document.getPage(1).getCropBox().getWidth();
-            PDFRenderer renderer = new PDFRenderer(document);
-            return renderer.renderImage(1);
+
+            File file = new File(path);
+            is = new FileInputStream(file);
+
+            // Get the size of the file
+            long length = file.length();
+            byte[] bytes = new byte[(int) length];
+            int offset = 0;
+            int numRead = 0;
+            while (offset < bytes.length && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+                offset += numRead;
+            }
+            ByteBuffer buffer = ByteBuffer.wrap(bytes);
+            PDFFile pdfFile = new PDFFile(buffer);
+            PDFPage page = pdfFile.getPage(1, true);
+            return page.getImage(sizeHint.x, sizeHint.y, null, true, true);
+
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         return null;
