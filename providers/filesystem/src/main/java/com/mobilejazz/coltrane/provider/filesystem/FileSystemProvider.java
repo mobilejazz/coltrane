@@ -119,13 +119,11 @@ public class FileSystemProvider extends DocumentsProvider {
         FileOutputStream out = null;
         try {
             File cacheDir = getContext().getCacheDir();
-            File thumbnail = new File(cacheDir, getDocumentThumbnailId(documentId, sizeHint));
-            if (!thumbnail.exists()) {
-                String mimeType = getDocumentType(documentId);
-                Bitmap bitmap = Thumbnail.fromFile(documentId, sizeHint, mimeType);
-                out = new FileOutputStream(thumbnail);
-                bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
-            }
+            File thumbnail = File.createTempFile(getDocumentThumbnailId(documentId, sizeHint), "", cacheDir);
+            String mimeType = getDocumentType(documentId);
+            Bitmap bitmap = Thumbnail.fromFile(documentId, sizeHint, mimeType);
+            out = new FileOutputStream(thumbnail);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
             return thumbnail;
         } catch (IOException e) {
             Timber.e("Error writing thumbnail", e);
