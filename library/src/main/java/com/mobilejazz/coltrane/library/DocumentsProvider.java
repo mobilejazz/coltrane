@@ -42,10 +42,6 @@ public abstract class DocumentsProvider {
 
     public abstract Collection<? extends Root> getRoots() throws FileNotFoundException;
 
-    public AssetFileDescriptor openDocumentThumbnail(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
-        throw new UnsupportedOperationException("Document thumbnails not supported");
-    }
-
     public Uri getDocumentThumbnailUri(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Document thumbnails not supported");
     }
