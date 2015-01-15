@@ -59,7 +59,23 @@ public class Thumbnail {
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
             PDFFile pdfFile = new PDFFile(buffer);
             PDFPage page = pdfFile.getPage(1, true);
-            return page.getImage(sizeHint.x, sizeHint.y, null, true, true);
+
+            float pageWidth = page.getWidth();
+            float pageHeight = page.getHeight();
+
+            float aspectRatio = pageWidth / pageHeight;
+            float desiredAspectRatio = (float)sizeHint.x / (float)sizeHint.y;
+
+            int w, h;
+            if (aspectRatio > desiredAspectRatio) {
+                w = sizeHint.x;
+                h = (int)(w / aspectRatio);
+            } else {
+                h = sizeHint.y;
+                w = (int)(h * aspectRatio);
+            }
+
+            return page.getImage(w, h, null, true, true);
 
         } catch (IOException e) {
             e.printStackTrace();

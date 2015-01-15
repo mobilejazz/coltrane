@@ -15,6 +15,7 @@ import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -59,34 +60,42 @@ public class FileDetailActivity extends Activity {
             }
         });
 
-    }
+        mImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                //now we can retrieve the width and height
+                final int width = mImageView.getWidth();
+                final int height = mImageView.getHeight();
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+                new AsyncTask<Void, Void, Uri>() {
 
-
-            new AsyncTask<Void, Void, Uri>() {
-
-                @Override
-                protected Uri doInBackground(Void... params) {
-                    try {
-                        Display display = getWindowManager().getDefaultDisplay();
-                        Point size = new Point();
-                        display.getSize(size);
-                        return mProvider.getDocumentThumbnailUri(mDocumentId, size, null);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (UserRecoverableException e) {
-                        e.printStackTrace();
+                    @Override
+                    protected Uri doInBackground(Void... params) {
+                        try {
+                            return mProvider.getDocumentThumbnailUri(mDocumentId, new Point(width, height), null);
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (UserRecoverableException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
                     }
-                    return null;
+
+                    @Override
+                    protected void onPostExecute(Uri uri) {
+                        super.onPostExecute(uri);
+                        Picasso.with(FileDetailActivity.this).load(uri).into(mImageView);}
+                }.execute();
+
+                if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+                    mImageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                } else {
+                    mImageView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                 }
 
-                @Override
-                protected void onPostExecute(Uri uri) {
-                    super.onPostExecute(uri);
-                    Picasso.with(FileDetailActivity.this).load(uri).into(mImageView);}
-            }.execute();
+            }
+        });
+
     }
+
 }
