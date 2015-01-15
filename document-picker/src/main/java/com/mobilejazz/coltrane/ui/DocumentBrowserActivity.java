@@ -327,7 +327,7 @@ public class DocumentBrowserActivity extends Activity implements
     }
 
     @Override
-    public void onLoadFinished(Loader<List<Root>> loader, List<Root> data) {
+    public void onLoadFinished(Loader<List<Root>> loader, final List<Root> data) {
         mDrawerAdapter.clear();
         mDrawerAdapter.addAll(data);
         populateRootIndices();
@@ -335,12 +335,16 @@ public class DocumentBrowserActivity extends Activity implements
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (mSavedInstanceState == null) {
-                    selectItem(0);
+                if (data.size() > 0) {
+                    if (mSavedInstanceState == null) {
+                        selectItem(0);
+                    } else {
+                        int selected = mSavedInstanceState.getInt(SELECTED_ITEM);
+                        mCurrentDocumentId = mSavedInstanceState.getString(PATH);
+                        selectItem(selected);
+                    }
                 } else {
-                    int selected = mSavedInstanceState.getInt(SELECTED_ITEM);
-                    mCurrentDocumentId = mSavedInstanceState.getString(PATH);
-                    selectItem(selected);
+                    mNavigationAdapter.setHeader(getString(R.string.no_provider));
                 }
             }
         });

@@ -4,14 +4,24 @@ import android.annotation.TargetApi;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.graphics.Point;
+import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
 import android.provider.BaseColumns;
+import android.util.Base64;
 
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 import com.mobilejazz.coltrane.library.compatibility.MatrixCursor;
+import com.mobilejazz.coltrane.library.utils.FileUtils;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Collection;
 import java.util.List;
 
@@ -77,13 +87,36 @@ public abstract class NativeDocumentsProvider extends android.provider.Documents
     }
 
     @Override
-    public AssetFileDescriptor openDocumentThumbnail(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException {
+    public AssetFileDescriptor openDocumentThumbnail(final String documentId, final Point sizeHint,
+                                                     final CancellationSignal signal) throws FileNotFoundException {
         try {
-            return getDelegate().openDocumentThumbnail(documentId, sizeHint, signal);
+            Uri thumbnailUri = getDelegate().getDocumentThumbnailUri(documentId, sizeHint, signal);
+            File file;
+            if (thumbnailUri.getScheme().equals("file")) {
+                file = new File(thumbnailUri.getPath());
+            } else {
+                URLConnection urlConnection = new URL(thumbnailUri.toString()).openConnection();
+                file = File.createTempFile(Base64.encodeToString(documentId.getBytes(), Base64.URL_SAFE) + "_" + sizeHint.x + "_" + sizeHint.y, "", getContext().getCacheDir());
+                FileOutputStream out = new FileOutputStream(file);
+                FileUtils.copyStream(urlConnection.getInputStream(), out);
+                out.close();
+            }
+
+            return new AssetFileDescriptor(
+                    ParcelFileDescriptor.open(
+                                file,
+                                ParcelFileDescriptor.MODE_READ_ONLY
+                            ), 0,
+                            AssetFileDescriptor.UNKNOWN_LENGTH);
         } catch (UserRecoverableException e) {
-            throw new FileNotFoundException(e.getLocalizedMessage()); // TODO
+            throw new FileNotFoundException(e.getLocalizedMessage());
+        } catch (MalformedURLException e) {
+            throw new FileNotFoundException(e.getLocalizedMessage());
+        } catch (IOException e) {
+            throw new FileNotFoundException(e.getLocalizedMessage());
         }
     }
+
 
     @Override
     public Cursor queryRecentDocuments(String rootId, String[] projection) throws FileNotFoundException {

@@ -42,4 +42,5 @@ dependencies {
     compile project(':filesystem')
     compile project(':gdrive')
     compile project(':document-picker')
+    compile 'com.squareup.picasso:picasso:2.4.0'
 }
