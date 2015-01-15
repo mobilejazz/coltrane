@@ -139,22 +139,6 @@ public class FileSystemProvider extends DocumentsProvider {
     }
 
     @Override
-    public AssetFileDescriptor openDocumentThumbnail(final String documentId, final Point sizeHint,
-                                                     final CancellationSignal signal) throws FileNotFoundException {
-
-        // It appears the Storage Framework UI caches these results quite
-        // aggressively so there is little reason to
-        // write your own caching layer beyond what you need to return a single
-        // AssetFileDescriptor
-        return new AssetFileDescriptor(
-                ParcelFileDescriptor.open(
-                    getDocumentThumbnailFile(documentId, sizeHint),
-                    ParcelFileDescriptor.MODE_READ_ONLY
-                ), 0,
-                AssetFileDescriptor.UNKNOWN_LENGTH);
-    }
-
-    @Override
     public Uri getDocumentThumbnailUri(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
         return Uri.fromFile(getDocumentThumbnailFile(documentId, sizeHint));
     }
