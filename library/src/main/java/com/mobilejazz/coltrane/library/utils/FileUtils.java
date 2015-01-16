@@ -30,14 +30,19 @@ import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.util.Comparator;
 
@@ -389,6 +394,16 @@ public class FileUtils {
         {
             output.write(buffer, 0, bytesRead);
         }
+    }
+
+    public static File download(Context context, Uri uri) throws IOException {
+        String uriString = uri.toString();
+        URLConnection urlConnection = new URL(uriString).openConnection();
+        File file = File.createTempFile(Base64.encodeToString(uriString.getBytes(), Base64.URL_SAFE), "", context.getCacheDir());
+        FileOutputStream out = new FileOutputStream(file);
+        FileUtils.copyStream(urlConnection.getInputStream(), out);
+        out.close();
+        return file;
     }
 
 }

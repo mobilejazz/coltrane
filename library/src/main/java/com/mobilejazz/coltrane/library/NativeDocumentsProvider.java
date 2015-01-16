@@ -95,11 +95,7 @@ public abstract class NativeDocumentsProvider extends android.provider.Documents
             if (thumbnailUri.getScheme().equals("file")) {
                 file = new File(thumbnailUri.getPath());
             } else {
-                URLConnection urlConnection = new URL(thumbnailUri.toString()).openConnection();
-                file = File.createTempFile(Base64.encodeToString(documentId.getBytes(), Base64.URL_SAFE) + "_" + sizeHint.x + "_" + sizeHint.y, "", getContext().getCacheDir());
-                FileOutputStream out = new FileOutputStream(file);
-                FileUtils.copyStream(urlConnection.getInputStream(), out);
-                out.close();
+                file = FileUtils.download(getContext(), thumbnailUri);
             }
 
             return new AssetFileDescriptor(
