@@ -52,13 +52,6 @@
         </activity>
 
         <provider
-            android:name="com.mobilejazz.coltrane.library.DocumentUriProvider"
-            android:authorities="com.mobilejazz.coltrane.library.provider"
-            android:exported="true"
-            android:enabled="true">
-        </provider>
-
-        <provider
             android:name="com.mobilejazz.coltrane.provider.filesystem.NativeFileSystemProvider"
             android:authorities="com.mobilejazz.coltrane.provider.filesystem.documents"
             android:enabled="@bool/use_provider"
