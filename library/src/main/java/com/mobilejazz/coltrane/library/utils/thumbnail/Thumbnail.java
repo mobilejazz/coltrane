@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 
 import com.mobilejazz.coltrane.library.utils.FileUtils;
 import com.sun.pdfview.PDFFile;
@@ -21,13 +22,14 @@ import java.io.InputStream;
 
 public class Thumbnail {
 
-    public static Bitmap fromImage(final InputStream input, final Point sizeHint) throws IOException {
+    public static Bitmap fromImage(final ParcelFileDescriptor input, final Point sizeHint) throws IOException {
         try {
+
             // Assume documentId points to an image file. Build a thumbnail no
             // larger than twice the sizeHint
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(input, null, options);
+            BitmapFactory.decodeFileDescriptor(input.getFileDescriptor(), null, options);
             final int targetHeight = 2 * sizeHint.y;
             final int targetWidth = 2 * sizeHint.x;
             final int height = options.outHeight;
@@ -45,19 +47,27 @@ public class Thumbnail {
                 }
             }
             options.inJustDecodeBounds = false;
-            return BitmapFactory.decodeStream(input, null, options);
+            return BitmapFactory.decodeFileDescriptor(input.getFileDescriptor(), null, options);
         } finally {
             input.close();
         }
     }
 
-    public static Bitmap fromPDF(final InputStream input, final Point sizeHint) throws IOException {
+    public static Bitmap fromPDF(final ParcelFileDescriptor input, final Point sizeHint) throws IOException {
+        InputStream is = null;
         try {
             // Get the size of the file
+            is = new FileInputStream(input.getFileDescriptor());
 
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            FileUtils.copyStream(input, bos);
-            ByteBuffer buffer = ByteBuffer.wrap(bos.toByteArray());
+            // Get the size of the file
+            long length = input.getStatSize();
+            byte[] bytes = new byte[(int) length];
+            int offset = 0;
+            int numRead = 0;
+            while (offset < bytes.length && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+                offset += numRead;
+            }
+            ByteBuffer buffer = ByteBuffer.wrap(bytes);
             PDFFile pdfFile = new PDFFile(buffer);
             PDFPage page = pdfFile.getPage(1, true);
 
@@ -79,11 +89,11 @@ public class Thumbnail {
             return page.getImage(w, h, null, true, true);
 
         } finally {
-            input.close();
+            is.close();
         }
     }
 
-    public static Bitmap fromStream(final InputStream input, final Point sizeHint, final String mimeType) throws IOException {
+    public static Bitmap fromFileDescriptor(final ParcelFileDescriptor input, final Point sizeHint, final String mimeType) throws IOException {
         if ("application/pdf".equals(mimeType)) {
             return fromPDF(input, sizeHint);
         } else if (mimeType.startsWith("image")) {
@@ -94,11 +104,11 @@ public class Thumbnail {
     }
 
     public static Bitmap fromFile(final File file, final Point sizeHint, final String mimeType) throws IOException {
-        return fromStream(new FileInputStream(file), sizeHint, mimeType);
+        return fromFileDescriptor(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY), sizeHint, mimeType);
     }
 
     public static Bitmap fromFile(final String file, final Point sizeHint, final String mimeType) throws IOException {
-        return fromStream(new FileInputStream(file), sizeHint, mimeType);
+        return fromFile(new File(file), sizeHint, mimeType);
     }
 
 }
