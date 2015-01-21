@@ -24,6 +24,7 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.widget.ContentLoadingProgressBar;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,7 +40,7 @@ import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 /**
  * Fragment that displays a list of Files in a given path.
  */
-public class DocumentListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class DocumentListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor>, SwipeRefreshLayout.OnRefreshListener {
 
     private static final String PROVIDER = "com.mobilejazz.coltrane.ui.browser.fragment.provider";
 
@@ -70,6 +71,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
     private TextView mEmptyTextView;
     private View mProgressContainer;
     private View mListContainer;
+    private SwipeRefreshLayout mSwipeLayout;
 
     private Intent mPendingAction;
 
@@ -132,6 +134,13 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
         return view;
     }
 
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mSwipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
+        mSwipeLayout.setOnRefreshListener(this);
+    }
+
     protected void changeEmptyView(View v) {
         View old = getListView().getEmptyView();
         if (old != null) {
@@ -169,6 +178,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         mAdapter.changeCursor(data);
+        mSwipeLayout.setRefreshing(false);
 
         if (isResumed())
             setListShown(true);
@@ -211,9 +221,13 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mAdapter.changeCursor(null);
+        mSwipeLayout.setRefreshing(false);
     }
 
-
+    @Override
+    public void onRefresh() {
+        getLoaderManager().restartLoader(LOADER_ID, null, this);
+    }
 
 
     // ------------ THIS IS COPIED FROM THE SUPER CLASS BECAUSE OF ACCESS LIMITATIONS ---------- //

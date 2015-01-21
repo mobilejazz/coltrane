@@ -283,7 +283,7 @@ public class DocumentBrowserActivity extends Activity implements
         String providerId = mRoot.getProvider().getId();
         String documentId = document.getId();
 
-        i.setDataAndType(DocumentUriProvider.getUri(providerId, documentId), document.getMimeType());
+        i.setDataAndType(DocumentUriProvider.getUri(this, providerId, documentId), document.getMimeType());
         i.putExtra(EXTRA_PROVIDER, providerId);
         i.putExtra(EXTRA_DOCUMENT_ID, documentId);
         i.putExtra(EXTRA_DOCUMENT_NAME, document.getName());
