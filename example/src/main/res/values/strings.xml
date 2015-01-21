@@ -27,4 +27,6 @@
 
     <string name="error_no_activity">No activity was found to open files of this type.</string>
 
+    <string name="document_uri_authority" translatable="false">com.mobilejazz.coltrane.example.DocumentUriProvider</string>
+
 </resources>

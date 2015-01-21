@@ -2,6 +2,7 @@ package com.mobilejazz.coltrane.library;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.CancellationSignal;
@@ -92,8 +93,12 @@ public class DocumentUriProvider extends ContentProvider {
         }
     }
 
-    public static Uri getUri(String providerId, String documentId) {
-        return new Uri.Builder().scheme("content").authority(AUTHORITY).appendPath(providerId).appendPath(documentId).build();
+    public static Uri getUri(Context c, String providerId, String documentId) {
+        return new Uri.Builder().scheme("content").authority(getAuthority(c)).appendPath(providerId).appendPath(documentId).build();
+    }
+
+    protected static String getAuthority(Context c) {
+        return c.getString(R.string.document_uri_authority);
     }
 
 }
