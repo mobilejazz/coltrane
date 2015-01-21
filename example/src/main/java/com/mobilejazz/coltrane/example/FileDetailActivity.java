@@ -1,6 +1,8 @@
 package com.mobilejazz.coltrane.example;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +14,8 @@ import android.os.Bundle;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -43,35 +47,55 @@ public class FileDetailActivity extends Activity {
 
         mImageView = (ImageView)findViewById(R.id.thumbnail);
 
-    }
+        mImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Intent view = new Intent(Intent.ACTION_VIEW);
+                    view.setDataAndType(getIntent().getData(), getIntent().getType());
+                    startActivity(view);
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(FileDetailActivity.this, getString(R.string.error_no_activity), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+        mImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                //now we can retrieve the width and height
+                final int width = mImageView.getWidth();
+                final int height = mImageView.getHeight();
 
+                new AsyncTask<Void, Void, Uri>() {
 
-            new AsyncTask<Void, Void, Uri>() {
-
-                @Override
-                protected Uri doInBackground(Void... params) {
-                    try {
-                        Display display = getWindowManager().getDefaultDisplay();
-                        Point size = new Point();
-                        display.getSize(size);
-                        return mProvider.getDocumentThumbnailUri(mDocumentId, size, null);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (UserRecoverableException e) {
-                        e.printStackTrace();
+                    @Override
+                    protected Uri doInBackground(Void... params) {
+                        try {
+                            return mProvider.getDocumentThumbnailUri(mDocumentId, new Point(width, height), null);
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (UserRecoverableException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
                     }
-                    return null;
+
+                    @Override
+                    protected void onPostExecute(Uri uri) {
+                        super.onPostExecute(uri);
+                        Picasso.with(FileDetailActivity.this).load(uri).into(mImageView);}
+                }.execute();
+
+                if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+                    mImageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                } else {
+                    mImageView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                 }
 
-                @Override
-                protected void onPostExecute(Uri uri) {
-                    super.onPostExecute(uri);
-                    Toast.makeText(FileDetailActivity.this, uri.toString(), Toast.LENGTH_LONG).show();
-                    Picasso.with(FileDetailActivity.this).load(uri).into(mImageView);}
-            }.execute();
+            }
+        });
+
     }
+
 }

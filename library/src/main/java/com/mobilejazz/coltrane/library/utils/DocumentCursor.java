@@ -9,7 +9,6 @@ import com.mobilejazz.coltrane.library.compatibility.DocumentsContract.Document;
 
 public class DocumentCursor extends CursorWrapper {
 
-    private int mUri;
     private int mId;
     private int mMimeType;
     private int mName;
@@ -21,7 +20,6 @@ public class DocumentCursor extends CursorWrapper {
 
     public DocumentCursor(Cursor c) {
         super(c);
-        mUri = c.getColumnIndex(Document.COLUMN_DOCUMENT_URI);
         mId = c.getColumnIndex(Document.COLUMN_DOCUMENT_ID);
         mMimeType = c.getColumnIndex(Document.COLUMN_MIME_TYPE);
         mName = c.getColumnIndex(Document.COLUMN_DISPLAY_NAME);
@@ -51,15 +49,6 @@ public class DocumentCursor extends CursorWrapper {
     private Integer getIntField(int index) {
         if (index >= 0) {
             return getWrappedCursor().getInt(index);
-        } else {
-            return null;
-        }
-    }
-
-    public Uri getUri() {
-        String s = getString(mUri);
-        if (!TextUtils.isEmpty(s)) {
-            return Uri.parse(s);
         } else {
             return null;
         }

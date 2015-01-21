@@ -13,7 +13,6 @@ public class FileCursor extends MatrixCursor {
 
     private static final String[] sColumnNames = new String[] {
             BaseColumns._ID,
-            Document.COLUMN_DOCUMENT_URI,
             Document.COLUMN_DOCUMENT_ID,
             Document.COLUMN_MIME_TYPE,
             Document.COLUMN_DISPLAY_NAME,
@@ -44,7 +43,6 @@ public class FileCursor extends MatrixCursor {
             RowBuilder row = newRow();
 
             row.add(BaseColumns._ID, index++);
-            row.add(Document.COLUMN_DOCUMENT_URI, f.getDownloadUrl());
             row.add(Document.COLUMN_DOCUMENT_ID, GoogleDriveProvider.Document.getDocumentId(root, f.getId()));
             row.add(Document.COLUMN_MIME_TYPE, mimeType);
             row.add(Document.COLUMN_DISPLAY_NAME, f.getTitle());
