@@ -8,15 +8,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
+import android.util.LruCache;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.About;
@@ -131,6 +132,15 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
 
     private Map<String, GDriveRoot> mRoots;
 
+    private LruCache<String, File> mDocumentCache = new LruCache<String, File>(256);
+    private LruCache<String, List<File>> mChildrenCache = new LruCache<String, List<File>>(1024) {
+
+        @Override
+        protected int sizeOf(String key, List<File> value) {
+            return value.size();
+        }
+    };
+
     public GoogleDriveProvider(Context context) {
         super(context);
     }
@@ -154,7 +164,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             for (Account a : accounts) {
                 credential = GoogleAccountCredential.usingOAuth2(getContext(), Collections.singleton(DriveScopes.DRIVE));
                 credential.setSelectedAccountName(a.name);
-                Drive service = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), credential).setApplicationName(getContext().getApplicationInfo().name).build();
+                Drive service = new Drive.Builder(new NetHttpTransport(), new AndroidJsonFactory(), credential).setApplicationName(getContext().getApplicationInfo().name).build();
                 mRoots.put(a.name, new GDriveRoot(this, a, service));
             }
         }
@@ -165,7 +175,11 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
     public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException, UserRecoverableException {
         try {
             Document d = new Document(mRoots, parentDocumentId);
-            List<File> files = d.getRoot().getDrive().files().list().setQ("'" + d.getDriveId() + "'" + " in parents and trashed=false and not (mimeType != 'application/vnd.google-apps.folder' and mimeType contains 'application/vnd.google-apps')").execute().getItems();
+            List<File> files = mChildrenCache.get(parentDocumentId);
+            if (files == null) {
+                files = d.getRoot().getDrive().files().list().setQ("'" + d.getDriveId() + "'" + " in parents and trashed=false and not (mimeType != 'application/vnd.google-apps.folder' and mimeType contains 'application/vnd.google-apps')").execute().getItems();
+                mChildrenCache.put(parentDocumentId, files);
+            }
             return new FileCursor(d.getRoot(), files);
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
@@ -178,7 +192,11 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
     public Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException, UserRecoverableException {
         try {
             Document d = new Document(mRoots, documentId);
-            File file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
+            File file = mDocumentCache.get(documentId);
+            if (file == null) {
+                file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
+                mDocumentCache.put(documentId, file);
+            }
             return new FileCursor(d.getRoot(), Collections.singletonList(file));
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
