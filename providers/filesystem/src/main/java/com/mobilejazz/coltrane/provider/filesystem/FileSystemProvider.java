@@ -19,12 +19,15 @@ import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 import com.mobilejazz.coltrane.library.compatibility.MatrixCursor;
+import com.mobilejazz.coltrane.library.utils.DocumentCursor;
+import com.mobilejazz.coltrane.library.utils.ListCursor;
 import com.mobilejazz.coltrane.library.utils.thumbnail.Thumbnail;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,6 +48,8 @@ public class FileSystemProvider extends DocumentsProvider {
             DocumentsContract.Document.COLUMN_SIZE,
             DocumentsContract.Document.COLUMN_LAST_MODIFIED
     };
+
+    private FileAccessor mAccessor = new FileAccessor();
 
     public FileSystemProvider(Context context) {
         super(context);
@@ -76,28 +81,21 @@ public class FileSystemProvider extends DocumentsProvider {
 
     @Override
     public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException {
-        // Create a cursor with either the requested fields, or the default
-        // projection if "projection" is null.
-        final MatrixCursor result = new MatrixCursor(projection != null ? projection : DEFAULT_DOCUMENT_PROJECTION);
         final File parent = new File(parentDocumentId);
-        int id = 0;
+        List<File> files = new ArrayList<File>();
         for (File file : parent.listFiles()) {
             // Don't show hidden files/folders
             if (!file.getName().startsWith(".")) {
                 // Adds the file's display name, MIME type, size, and so on.
-                includeFile(result, file, id++);
+                files.add(file);
             }
         }
-        return result;
+        return new ListCursor<File>(files, mAccessor, projection, sortOrder);
     }
 
     @Override
     public Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException {
-        // Create a cursor with either the requested fields, or the default
-        // projection if "projection" is null.
-        final MatrixCursor result = new MatrixCursor(projection != null ? projection : DEFAULT_DOCUMENT_PROJECTION);
-        includeFile(result, new File(documentId), 0);
-        return result;
+        return new ListCursor<File>(Collections.singletonList(new File(documentId)), mAccessor, projection, null);
     }
 
     @Override
@@ -120,7 +118,7 @@ public class FileSystemProvider extends DocumentsProvider {
         try {
             File cacheDir = getContext().getCacheDir();
             File thumbnail = File.createTempFile(getDocumentThumbnailId(documentId, sizeHint), "", cacheDir);
-            String mimeType = getDocumentType(documentId);
+            String mimeType = new DocumentCursor(queryDocument(documentId, new String[]{DocumentsContract.Document.COLUMN_MIME_TYPE})).getMimeType();
             Bitmap bitmap = Thumbnail.fromFile(documentId, sizeHint, mimeType);
             out = new FileOutputStream(thumbnail);
             bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
@@ -143,21 +141,21 @@ public class FileSystemProvider extends DocumentsProvider {
         return Uri.fromFile(getDocumentThumbnailFile(documentId, sizeHint));
     }
 
-    public String getDocumentType(final String documentId) throws FileNotFoundException {
-        File file = new File(documentId);
-        if (file.isDirectory())
-            return DocumentsContract.Document.MIME_TYPE_DIR;
-        // From FileProvider.getType(Uri)
-        final int lastDot = file.getName().lastIndexOf('.');
-        if (lastDot >= 0) {
-            final String extension = file.getName().substring(lastDot + 1);
-            final String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-            if (mime != null) {
-                return mime;
-            }
-        }
-        return "application/octet-stream";
-    }
+//    public String getDocumentType(final String documentId) throws FileNotFoundException {
+//        File file = new File(documentId);
+//        if (file.isDirectory())
+//            return DocumentsContract.Document.MIME_TYPE_DIR;
+//        // From FileProvider.getType(Uri)
+//        final int lastDot = file.getName().lastIndexOf('.');
+//        if (lastDot >= 0) {
+//            final String extension = file.getName().substring(lastDot + 1);
+//            final String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+//            if (mime != null) {
+//                return mime;
+//            }
+//        }
+//        return "application/octet-stream";
+//    }
 
     @Override
     public String createDocument(String parentDocumentId, String mimeType, String displayName) throws FileNotFoundException {
@@ -180,31 +178,31 @@ public class FileSystemProvider extends DocumentsProvider {
         DocumentsProviderRegistry.get().register(ID, new FileSystemProvider(context));
     }
 
-    private void includeFile(final MatrixCursor result, final File file, long id)
-            throws FileNotFoundException {
-        final MatrixCursor.RowBuilder row = result.newRow();
-        // These columns are required
-        row.add(BaseColumns._ID, id); // for supporting CursorAdapter
-        row.add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, file.getAbsolutePath());
-        row.add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, file.getName());
-        String mimeType = getDocumentType(file.getAbsolutePath());
-        row.add(DocumentsContract.Document.COLUMN_MIME_TYPE, mimeType);
-        int flags = file.canWrite() ? DocumentsContract.Document.FLAG_SUPPORTS_DELETE | DocumentsContract.Document.FLAG_SUPPORTS_WRITE
-                : 0;
-        // We only show thumbnails for image files - expect a call to
-        // openDocumentThumbnail for each file that has
-        // this flag set
-        if (mimeType.startsWith("image/"))
-            flags |= DocumentsContract.Document.FLAG_SUPPORTS_THUMBNAIL;
-        row.add(DocumentsContract.Document.COLUMN_FLAGS, flags);
-        // COLUMN_SIZE is required, but can be null
-        row.add(DocumentsContract.Document.COLUMN_SIZE, file.length());
-        // These columns are optional
-        row.add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, file.lastModified());
-        // Document.COLUMN_ICON can be a resource id identifying a custom icon.
-        // The system provides default icons
-        // based on mime type
-        // Document.COLUMN_SUMMARY is optional additional information about the
-        // file
-    }
+//    private void includeFile(final MatrixCursor result, final File file, long id)
+//            throws FileNotFoundException {
+//        final MatrixCursor.RowBuilder row = result.newRow();
+//        // These columns are required
+//        row.add(BaseColumns._ID, id); // for supporting CursorAdapter
+//        row.add(DocumentsContract.Document.COLUMN_DOCUMENT_ID, file.getAbsolutePath());
+//        row.add(DocumentsContract.Document.COLUMN_DISPLAY_NAME, file.getName());
+//        String mimeType = getDocumentType(file.getAbsolutePath());
+//        row.add(DocumentsContract.Document.COLUMN_MIME_TYPE, mimeType);
+//        int flags = file.canWrite() ? DocumentsContract.Document.FLAG_SUPPORTS_DELETE | DocumentsContract.Document.FLAG_SUPPORTS_WRITE
+//                : 0;
+//        // We only show thumbnails for image files - expect a call to
+//        // openDocumentThumbnail for each file that has
+//        // this flag set
+//        if (mimeType.startsWith("image/"))
+//            flags |= DocumentsContract.Document.FLAG_SUPPORTS_THUMBNAIL;
+//        row.add(DocumentsContract.Document.COLUMN_FLAGS, flags);
+//        // COLUMN_SIZE is required, but can be null
+//        row.add(DocumentsContract.Document.COLUMN_SIZE, file.length());
+//        // These columns are optional
+//        row.add(DocumentsContract.Document.COLUMN_LAST_MODIFIED, file.lastModified());
+//        // Document.COLUMN_ICON can be a resource id identifying a custom icon.
+//        // The system provides default icons
+//        // based on mime type
+//        // Document.COLUMN_SUMMARY is optional additional information about the
+//        // file
+//    }
 }

@@ -23,6 +23,7 @@ import android.database.Cursor;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
+import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 
 import java.io.FileNotFoundException;
 
@@ -66,7 +67,7 @@ public class DocumentLoader extends AsyncTaskLoader<Cursor> {
     @Override
 	public Cursor loadInBackground() {
         try {
-            return mProvider.queryChildDocuments(mParentDocumentId, null, null);
+            return mProvider.queryChildDocuments(mParentDocumentId, null, DocumentsContract.Document.COLUMN_DISPLAY_NAME);
         } catch (FileNotFoundException e) {
             return null;
         } catch (UserRecoverableException e) {

@@ -111,4 +111,8 @@ public class Thumbnail {
         return fromFile(new File(file), sizeHint, mimeType);
     }
 
+    public static boolean isSupported(String mimeType) {
+        return "application/pdf".equals(mimeType) || mimeType.startsWith("image");
+    }
+
 }

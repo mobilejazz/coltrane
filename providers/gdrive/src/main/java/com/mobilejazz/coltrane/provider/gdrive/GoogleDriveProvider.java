@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
+import android.text.TextUtils;
 import android.util.LruCache;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -26,6 +27,8 @@ import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
+import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
+import com.mobilejazz.coltrane.library.utils.ListCursor;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -33,6 +36,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -92,22 +97,29 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
 
     public static class Document {
 
+        private FileAccessor mAccessor;
         private GDriveRoot mRoot;
         private String mDriveId;
 
         public Document(GDriveRoot root, String driveId) {
             mRoot = root;
             mDriveId = driveId;
+            mAccessor = new FileAccessor(mRoot);
         }
 
         public Document(Map<String, GDriveRoot> roots, String documentId) {
             String[] ids = documentId.split(":");
             mRoot = roots.get(ids[0]);
             mDriveId = ids[1];
+            mAccessor = new FileAccessor(mRoot);
         }
 
         public GDriveRoot getRoot() {
             return mRoot;
+        }
+
+        public FileAccessor getAccessor() {
+            return mAccessor;
         }
 
         public String getDriveId() {
@@ -140,6 +152,10 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             return value.size();
         }
     };
+
+    private boolean isFolder(File f) {
+        return f.getMimeType().equals(GoogleDriveProvider.FOLDER_MIME_TYPE);
+    }
 
     public GoogleDriveProvider(Context context) {
         super(context);
@@ -180,7 +196,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                 files = d.getRoot().getDrive().files().list().setQ("'" + d.getDriveId() + "'" + " in parents and trashed=false and not (mimeType != 'application/vnd.google-apps.folder' and mimeType contains 'application/vnd.google-apps')").execute().getItems();
                 mChildrenCache.put(parentDocumentId, files);
             }
-            return new FileCursor(d.getRoot(), files);
+            return new ListCursor<File>(files, d.getAccessor(), projection, sortOrder);
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
         } catch (IOException e) {
@@ -197,7 +213,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                 file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
                 mDocumentCache.put(documentId, file);
             }
-            return new FileCursor(d.getRoot(), Collections.singletonList(file));
+            return new ListCursor<File>(Collections.singletonList(file), d.getAccessor(), projection, null);
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
         }  catch (IOException e) {
