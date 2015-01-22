@@ -128,7 +128,7 @@ public class DocumentBrowserActivity extends Activity implements
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
         mDrawerAdapter = new RootAdapter(this, R.layout.root);
 
-        mToolbar = (Toolbar)findViewById(R.id.toolbar);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
         getActionBar().hide();
 
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close) {
@@ -151,7 +151,7 @@ public class DocumentBrowserActivity extends Activity implements
 
 
         mNavigationAdapter = new BackStackAdapter(this, getFragmentManager(), R.layout.navigation_item, R.layout.navigation_item_dropdown);
-        mNavigationDropDown = (Spinner)findViewById(R.id.navigation_dropdown);
+        mNavigationDropDown = (Spinner) findViewById(R.id.navigation_dropdown);
         mNavigationDropDown.setOnItemSelectedListener(mNavigationListener);
         mNavigationDropDown.setAdapter(mNavigationAdapter);
 
@@ -234,8 +234,14 @@ public class DocumentBrowserActivity extends Activity implements
         }
     }
 
+    /**
+     * This method is called whenever an item in the left navigation drawer is selected. This can
+     * be the case when a user clicks on it, or when it is programmatically selected.
+     *
+     * @param position The position of the selected item in the list.
+     */
     private void selectItem(final int position) {
-        final Root root = (Root)mDrawerList.getItemAtPosition(position);
+        final Root root = (Root) mDrawerList.getItemAtPosition(position);
 
         if (root != mRoot) {
             replaceFragment(root, null, root.getTitle());
@@ -248,6 +254,8 @@ public class DocumentBrowserActivity extends Activity implements
 
     private void changeProvider(Root root, String documentId) {
         if (root != mRoot) {
+            // pop all:
+            mFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             mRootId = root.getDocumentId();
             mNavigationAdapter.setHeader(root.getTitle());
             mRoot = root;
