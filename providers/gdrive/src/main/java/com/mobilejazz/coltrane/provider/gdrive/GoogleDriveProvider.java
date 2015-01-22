@@ -27,6 +27,7 @@ import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
+import com.mobilejazz.coltrane.library.action.IntentPendingAction;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 import com.mobilejazz.coltrane.library.utils.ListCursor;
 
@@ -198,7 +199,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             }
             return new ListCursor<File>(files, d.getAccessor(), projection, sortOrder);
         } catch (UserRecoverableAuthIOException e) {
-            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         } catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
@@ -215,7 +216,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             }
             return new ListCursor<File>(Collections.singletonList(file), d.getAccessor(), projection, null);
         } catch (UserRecoverableAuthIOException e) {
-            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         }  catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
@@ -242,7 +243,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                 return ParcelFileDescriptor.open(downloadedFile, ParcelFileDescriptor.MODE_READ_ONLY);
             }
         } catch (UserRecoverableAuthIOException e) {
-            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         }  catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         } finally {
@@ -264,7 +265,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             String thumbnailLink = file.getThumbnailLink();
             return Uri.parse(thumbnailLink.substring(0, thumbnailLink.length() - 4) + "s" + Math.max(sizeHint.x, sizeHint.y));
         } catch (UserRecoverableAuthIOException e) {
-            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         }  catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }

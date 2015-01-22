@@ -125,7 +125,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
             public void onClick(View v) {
                 changeEmptyView(mEmptyTextView);
                 setListShown(false);
-                startActivityForResult(mPendingAction, REQUEST_RESOLVE_PROVIDER_ISSUE);
+                mPendingAction.performWith(DocumentListFragment.this, REQUEST_RESOLVE_PROVIDER_ISSUE);
             }
         });
         mEmptyTextView = (TextView)view.findViewById(R.id.empty);

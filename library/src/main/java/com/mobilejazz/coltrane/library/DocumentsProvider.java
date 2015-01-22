@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
 
+import com.mobilejazz.coltrane.library.action.PendingAction;
+
 import java.io.FileNotFoundException;
 import java.util.Collection;
 
@@ -64,6 +66,16 @@ public abstract class DocumentsProvider {
 
     public Cursor querySearchDocuments(String rootId, String query, String[] projection) throws FileNotFoundException, UserRecoverableException {
         throw new UnsupportedOperationException("Search not supported");
+    }
+
+    /**
+     * Adds a new account for this provider.
+     *
+     * @return A {@link PendingAction} that needs to be executed in order to add a new account. A
+     * provider returns {@code null}, if it doesn't support adding accounts.
+     */
+    public PendingAction linkAccount() {
+        return null; // not supported
     }
 
     public boolean onCreate() {
