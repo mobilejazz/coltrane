@@ -8,9 +8,15 @@ import com.mobilejazz.coltrane.library.utils.DocumentAccessor;
 
 public class FileAccessor extends DocumentAccessor<DbxFileInfo> {
 
+    private DropboxProvider.DropboxRoot mRoot;
+
+    public FileAccessor(DropboxProvider.DropboxRoot root) {
+        mRoot = root;
+    }
+
     @Override
     protected String getDocumentId(DbxFileInfo item) {
-        return item.path.toString();
+        return DropboxProvider.Document.getDocumentId(mRoot, item.path);
     }
 
     @Override
@@ -18,8 +24,15 @@ public class FileAccessor extends DocumentAccessor<DbxFileInfo> {
         if (item.isFolder) {
             return DocumentsContract.Document.MIME_TYPE_DIR;
         } else {
-            String ext = MimeTypeMap.getFileExtensionFromUrl(item.path.getName());
-            return MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+            String itemFileName = item.path.getName();
+            final int lastDot = itemFileName.lastIndexOf('.');
+            if (lastDot >= 0) {
+                final String extension = itemFileName.substring(lastDot + 1);
+                final String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                return mime;
+            }  else {
+                return null;
+            }
         }
     }
 

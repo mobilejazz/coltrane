@@ -13,6 +13,7 @@ import com.dropbox.sync.android.DbxFileInfo;
 import com.dropbox.sync.android.DbxFileSystem;
 import com.dropbox.sync.android.DbxPath;
 import com.mobilejazz.coltrane.library.DocumentsProvider;
+import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
 import com.mobilejazz.coltrane.library.action.PendingAction;
@@ -28,9 +29,10 @@ import java.util.TreeMap;
 
 public class DropboxProvider extends DocumentsProvider {
 
+    public static final String ID = "com.mobilejazz.coltrane.provider.dropbox";
+
     private DbxAccountManager mAccountManager;
     private Map<String, DropboxRoot> mRoots;
-    private FileAccessor mAccessor;
 
     public DropboxProvider(Context context) {
         super(context);
@@ -40,7 +42,6 @@ public class DropboxProvider extends DocumentsProvider {
     public boolean onCreate() {
         super.onCreate();
         mAccountManager = DbxAccountManager.getInstance(getContext(), getContext().getString(R.string.dropbox_api_key), getContext().getString(R.string.dropbox_api_secret));
-        mAccessor = new FileAccessor();
         return true;
     }
 
@@ -50,12 +51,11 @@ public class DropboxProvider extends DocumentsProvider {
             mRoots = new TreeMap<String, DropboxRoot>();
 
             try {
-                List<DropboxRoot> roots = new ArrayList<DropboxRoot>();
                 for (DbxAccount account : mAccountManager.getLinkedAccounts()) {
                     DbxFileSystem fs = DbxFileSystem.forAccount(account);
-                    roots.add(new DropboxRoot(fs));
+                    DropboxRoot root = new DropboxRoot(fs);
+                    mRoots.put(root.getId(), root);
                 }
-                return roots;
             } catch (DbxException.Unauthorized e) {
                 throw new FileNotFoundException(e.getLocalizedMessage());
             }
@@ -68,7 +68,7 @@ public class DropboxProvider extends DocumentsProvider {
         try {
             Document d = new Document(mRoots, parentDocumentId);
             List<DbxFileInfo> files = d.getRoot().getFileSystem().listFolder(d.getPath());
-            return new ListCursor<DbxFileInfo>(files, mAccessor, projection, sortOrder);
+            return new ListCursor<DbxFileInfo>(files, d.getAccessor(), projection, sortOrder);
         } catch (DbxException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
@@ -79,7 +79,7 @@ public class DropboxProvider extends DocumentsProvider {
         try {
             Document d = new Document(mRoots, documentId);
             DbxFileInfo file = d.getRoot().getFileSystem().getFileInfo(d.getPath());
-            return new ListCursor<DbxFileInfo>(Collections.singletonList(file), mAccessor, projection, null);
+            return new ListCursor<DbxFileInfo>(Collections.singletonList(file), d.getAccessor(), projection, null);
         } catch (DbxException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
@@ -92,7 +92,7 @@ public class DropboxProvider extends DocumentsProvider {
 
     @Override
     public String getId() {
-        return null;
+        return ID;
     }
 
     @Override
@@ -110,13 +110,18 @@ public class DropboxProvider extends DocumentsProvider {
         return R.drawable.ic_provider_dropbox;
     }
 
+    public static void register(Context context) {
+        DocumentsProviderRegistry.get().register(ID, new DropboxProvider(context));
+    }
+
     public class DropboxRoot extends Root {
 
         private DbxFileSystem mFileSystem;
 
         public DropboxRoot(DbxFileSystem fileSystem) {
-            super(DropboxProvider.this, fileSystem.getAccount().getUserId(), DbxPath.ROOT.getName(), fileSystem.getAccount().getUserId(), R.drawable.ic_provider_dropbox, 0, 0);
+            super(DropboxProvider.this, fileSystem.getAccount().getUserId(), null, fileSystem.getAccount().getAccountInfo().displayName, R.drawable.ic_provider_dropbox, 0, 0);
             mFileSystem = fileSystem;
+            setDocumentId(Document.getDocumentId(this, DbxPath.ROOT));
         }
 
         public DbxFileSystem getFileSystem() {
@@ -130,18 +135,23 @@ public class DropboxProvider extends DocumentsProvider {
         private DropboxRoot mRoot;
         private String mDriveId;
 
+        private FileAccessor mAccessor;
         private DbxPath mPath;
 
-        public Document(DropboxRoot root, String driveId) {
+        private void init(DropboxRoot root, String driveId) {
             mRoot = root;
             mDriveId = driveId;
-            mPath = new DbxPath(driveId);
+            mPath = new DbxPath(mDriveId);
+            mAccessor = new FileAccessor(mRoot);
+        }
+
+        public Document(DropboxRoot root, String driveId) {
+            init(root, driveId);
         }
 
         public Document(Map<String, DropboxRoot> roots, String documentId) {
             String[] ids = documentId.split(":");
-            mRoot = roots.get(ids[0]);
-            mDriveId = ids[1];
+            init(roots.get(ids[0]), ids[1]);
         }
 
         public DropboxRoot getRoot() {
@@ -160,8 +170,31 @@ public class DropboxProvider extends DocumentsProvider {
             return mPath;
         }
 
+        public FileAccessor getAccessor() {
+            return mAccessor;
+        }
+
         public static String getDocumentId(DropboxRoot root, String driveId) {
             return root.getId() + ":" + driveId;
+        }
+
+        public static String getPathString(DbxPath path) {
+//            if (path == null) {
+//                return "";
+//            } else if (path.equals(DbxPath.ROOT)) {
+//                return "/";
+//            } else {
+//                return getPathString(path.getParent()) + "/" + path.getName();
+//            }
+            if (path.equals(DbxPath.ROOT)) {
+                return "/";
+            } else {
+                return path.toString();
+            }
+        }
+
+        public static String getDocumentId(DropboxRoot root, DbxPath path) {
+            return getDocumentId(root, getPathString(path));
         }
 
     }
