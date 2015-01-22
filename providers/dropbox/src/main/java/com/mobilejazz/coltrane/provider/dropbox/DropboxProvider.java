@@ -100,6 +100,16 @@ public class DropboxProvider extends DocumentsProvider {
         return new LinkAction(mAccountManager);
     }
 
+    @Override
+    public String getName() {
+        return getContext().getString(R.string.dropbox_name);
+    }
+
+    @Override
+    public int getIcon() {
+        return R.drawable.ic_provider_dropbox;
+    }
+
     public class DropboxRoot extends Root {
 
         private DbxFileSystem mFileSystem;

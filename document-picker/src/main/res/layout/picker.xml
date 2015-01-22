@@ -31,14 +31,16 @@
     </LinearLayout>
 
     <!-- The navigation drawer -->
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="@dimen/drawer.width"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_gravity="start">
 
         <FrameLayout
+            android:id="@+id/top_label"
             android:layout_width="match_parent"
+            android:layout_alignParentTop="true"
             style="?android:attr/actionBarStyle">
 
             <TextView
@@ -47,14 +49,25 @@
 
         </FrameLayout>
 
+        <Button
+            android:id="@+id/link_account"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:text="@string/link_account"
+            android:onClick="linkAccount"
+            style="@style/Lollipop.Button.Square" />
 
         <ListView android:id="@+id/left_drawer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_below="@id/top_label"
+            android:layout_above="@id/link_account"
             android:choiceMode="singleChoice"
             android:divider="@android:color/transparent"
             android:dividerHeight="0dp"
             android:background="#f1f1f1" />
-    </LinearLayout>
+
+    </RelativeLayout>
 
 </android.support.v4.widget.DrawerLayout>

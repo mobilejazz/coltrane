@@ -1,7 +1,6 @@
 package com.mobilejazz.coltrane.provider.filesystem;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Point;
@@ -11,14 +10,12 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.BaseColumns;
 import android.util.Base64;
-import android.webkit.MimeTypeMap;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
-import com.mobilejazz.coltrane.library.compatibility.MatrixCursor;
 import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 import com.mobilejazz.coltrane.library.utils.ListCursor;
 import com.mobilejazz.coltrane.library.utils.thumbnail.Thumbnail;
@@ -68,7 +65,7 @@ public class FileSystemProvider extends DocumentsProvider {
                     homeDir.getAbsolutePath(),
                     homeDir.getAbsolutePath(),
                     getContext().getString(R.string.internal_storage),
-                    R.drawable.ic_provider,
+                    R.drawable.ic_provider_filesystem,
                     homeDir.getFreeSpace(),
                     DocumentsContract.Root.FLAG_LOCAL_ONLY | DocumentsContract.Root.FLAG_SUPPORTS_CREATE);
 
@@ -77,6 +74,16 @@ public class FileSystemProvider extends DocumentsProvider {
         } else {
             return Collections.emptyList();
         }
+    }
+
+    @Override
+    public String getName() {
+        return getContext().getString(R.string.filesystem_name);
+    }
+
+    @Override
+    public int getIcon() {
+        return R.drawable.ic_provider_filesystem;
     }
 
     @Override

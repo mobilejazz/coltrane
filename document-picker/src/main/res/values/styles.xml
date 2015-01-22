@@ -66,4 +66,9 @@
         <item name="android:textColor">?android:attr/textColorHighlightInverse</item>
     </style>
 
+    <style name="Lollipop.Button.Square" parent="android:style/Widget.Holo.Button">
+        <item name="android:background">@drawable/button_background_square</item>
+        <item name="android:textColor">?android:attr/textColorHighlightInverse</item>
+    </style>
+
 </resources>

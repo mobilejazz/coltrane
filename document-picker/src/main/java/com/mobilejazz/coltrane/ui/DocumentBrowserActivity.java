@@ -40,12 +40,14 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.mobilejazz.coltrane.library.DocumentUriProvider;
+import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 import com.mobilejazz.coltrane.library.utils.AsyncLoader;
 import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,9 +57,10 @@ import java.util.Map;
  * Main Activity that handles the FileListFragments
  */
 public class DocumentBrowserActivity extends Activity implements
-        FragmentManager.OnBackStackChangedListener, DocumentListFragment.Callbacks, LoaderManager.LoaderCallbacks<List<Root>> {
+        FragmentManager.OnBackStackChangedListener, DocumentListFragment.Callbacks, LoaderManager.LoaderCallbacks<List<Root>>, ProviderChooser.OnProviderSelectedListener {
 
     private static final int LOADER_ROOTS = 1;
+    private static final int REQUEST_NEW_ACCOUNT = 35093;
 
     public static final String PATH = "com.mobilejazz.coltrane.ui.browser.path";
     public static final String SELECTED_ITEM = "com.mobilejazz.coltrane.ui.browser.selected";
@@ -110,6 +113,7 @@ public class DocumentBrowserActivity extends Activity implements
     private ArrayAdapter<Root> mDrawerAdapter;
     private BackStackAdapter mNavigationAdapter;
     private Map<Root, Integer> mRootIndices;
+    private ArrayList<String> mLinkableProviderIds;
 
     private Bundle mSavedInstanceState;
 
@@ -120,6 +124,16 @@ public class DocumentBrowserActivity extends Activity implements
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.picker);
+
+        mLinkableProviderIds = new ArrayList<String>();
+        for (DocumentsProvider p : DocumentsProviderRegistry.get().getAll()) {
+            if (p.linkAccount() != null) {
+                mLinkableProviderIds.add(p.getId());
+            }
+        }
+        if (mLinkableProviderIds.isEmpty()) {
+            findViewById(R.id.link_account).setVisibility(View.GONE);
+        }
 
         mHandler = new Handler();
 
@@ -227,6 +241,16 @@ public class DocumentBrowserActivity extends Activity implements
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_NEW_ACCOUNT) {
+            if (resultCode == RESULT_OK) {
+                getLoaderManager().restartLoader(LOADER_ROOTS, null, this);
+            }
+        }
+    }
+
     private void populateRootIndices() {
         mRootIndices = new HashMap<Root, Integer>();
         for (int pos = 0; pos < mDrawerAdapter.getCount(); ++pos) {
@@ -329,6 +353,14 @@ public class DocumentBrowserActivity extends Activity implements
         unregisterReceiver(mStorageListener);
     }
 
+    public void linkAccount(View v) {
+        if (mLinkableProviderIds.size() > 1) {
+            new ProviderChooser().show(getFragmentManager(), "ProviderChooser");
+        } else {
+            DocumentsProviderRegistry.get().getProvider(mLinkableProviderIds.get(0)).linkAccount().performWith(this, REQUEST_NEW_ACCOUNT);
+        }
+    }
+
     @Override
     public Loader<List<Root>> onCreateLoader(int id, Bundle args) {
         return new AsyncLoader<List<Root>>(this) {
@@ -366,6 +398,12 @@ public class DocumentBrowserActivity extends Activity implements
     @Override
     public void onLoaderReset(Loader<List<Root>> loader) {
         mDrawerAdapter.clear();
+    }
+
+    @Override
+    public void onProviderSelected(DocumentsProvider provider) {
+        // link new account:
+        provider.linkAccount().performWith(this, REQUEST_NEW_ACCOUNT);
     }
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {

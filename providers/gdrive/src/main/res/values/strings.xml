@@ -1,3 +1,3 @@
 <resources>
-    <string name="app_name">GDrive</string>
+    <string name="gdrive.name">Google Drive</string>
 </resources>

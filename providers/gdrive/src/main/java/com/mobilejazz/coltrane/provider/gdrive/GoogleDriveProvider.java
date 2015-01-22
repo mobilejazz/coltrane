@@ -295,4 +295,14 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
         DocumentsProviderRegistry.get().register(ID, new GoogleDriveProvider(context));
     }
 
+    @Override
+    public String getName() {
+        return getContext().getString(R.string.gdrive_name);
+    }
+
+    @Override
+    public int getIcon() {
+        return R.drawable.ic_provider_gdrive;
+    }
+
 }
