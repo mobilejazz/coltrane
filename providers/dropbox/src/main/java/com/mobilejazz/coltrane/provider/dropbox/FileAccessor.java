@@ -16,7 +16,7 @@ public class FileAccessor extends DocumentAccessor<DbxFileInfo> {
 
     @Override
     protected String getDocumentId(DbxFileInfo item) {
-        return DropboxProvider.Document.getDocumentId(mRoot, item.path);
+        return Document.getDocumentId(mRoot, item.path);
     }
 
     @Override
