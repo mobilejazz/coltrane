@@ -35,6 +35,7 @@ import android.widget.TextView;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
+import com.mobilejazz.coltrane.library.action.PendingAction;
 import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 
 /**
@@ -73,7 +74,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
     private View mListContainer;
     private SwipeRefreshLayout mSwipeLayout;
 
-    private Intent mPendingAction;
+    private PendingAction mPendingAction;
 
     /**
      * Create a new instance with the given file path.
@@ -186,12 +187,12 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
             setListShownNoAnimation(true);
 
 
-        Intent pendingAction = ((DocumentLoader)loader).getPendingAction();
+        PendingAction pendingAction = ((DocumentLoader)loader).getPendingAction();
         if (pendingAction != null) {
             if (mPendingAction == null) {
                 mPendingAction = pendingAction;
                 changeEmptyView(mPendingActionView);
-                startActivityForResult(mPendingAction, REQUEST_RESOLVE_PROVIDER_ISSUE);
+                mPendingAction.performWith(this, REQUEST_RESOLVE_PROVIDER_ISSUE);
             }
         } else if (data == null) {
             // network error:

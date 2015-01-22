@@ -1,19 +1,18 @@
 package com.mobilejazz.coltrane.library;
 
-import android.content.Intent;
-
+import com.mobilejazz.coltrane.library.action.PendingAction;
 import java.io.IOException;
 
 public class UserRecoverableException extends IOException {
 
-    private Intent pendingAction;
+    private PendingAction pendingAction;
 
-    public UserRecoverableException(String message, Throwable cause, Intent pendingAction) {
+    public UserRecoverableException(String message, Throwable cause, PendingAction pendingAction) {
         super(message, cause);
         this.pendingAction = pendingAction;
     }
 
-    public Intent getPendingAction() {
+    public PendingAction getPendingAction() {
         return pendingAction;
     }
 
