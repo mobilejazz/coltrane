@@ -120,7 +120,7 @@ public class FileSystemProvider extends DocumentsProvider {
         try {
             File cacheDir = getContext().getCacheDir();
             File thumbnail = File.createTempFile(getDocumentThumbnailId(documentId, sizeHint), "", cacheDir);
-            String mimeType = new DocumentCursor(queryDocument(documentId, new String[]{DocumentsContract.Document.COLUMN_MIME_TYPE})).getMimeType();
+            String mimeType = mAccessor.getMimeType(new File(documentId));
             Bitmap bitmap = Thumbnail.fromFile(documentId, sizeHint, mimeType);
             out = new FileOutputStream(thumbnail);
             bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
