@@ -246,6 +246,7 @@ public class DocumentBrowserActivity extends Activity implements
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_NEW_ACCOUNT) {
             if (resultCode == RESULT_OK) {
+                Toast.makeText(this, R.string.account_linked, Toast.LENGTH_LONG).show();
                 getLoaderManager().restartLoader(LOADER_ROOTS, null, this);
             }
         }

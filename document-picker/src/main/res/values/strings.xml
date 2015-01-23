@@ -7,4 +7,5 @@
     <string name="link_account">Link Account</string>
     <string name="account_name">%s Account</string>
     <string name="choose_account">Select an account type</string>
+    <string name="account_linked">Account has been sucessfully linked</string>
 </resources>

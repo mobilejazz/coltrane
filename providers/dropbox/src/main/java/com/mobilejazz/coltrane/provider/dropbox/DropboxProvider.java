@@ -1,14 +1,11 @@
 package com.mobilejazz.coltrane.provider.dropbox;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
-import android.util.Base64;
 
 import com.dropbox.sync.android.DbxAccount;
 import com.dropbox.sync.android.DbxAccountManager;
@@ -22,19 +19,14 @@ import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
 import com.mobilejazz.coltrane.library.action.PendingAction;
-import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
-import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 import com.mobilejazz.coltrane.library.utils.FileUtils;
 import com.mobilejazz.coltrane.library.utils.ListCursor;
-import com.mobilejazz.coltrane.library.utils.thumbnail.Thumbnail;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -65,9 +57,9 @@ public class DropboxProvider extends DocumentsProvider {
     public Collection<? extends Root> getRoots() throws FileNotFoundException {
         if (mRoots == null) {
             mRoots = new TreeMap<String, DropboxRoot>();
-
             try {
                 for (DbxAccount account : mAccountManager.getLinkedAccounts()) {
+                    waitForAccountInfo(account);
                     DbxFileSystem fs = DbxFileSystem.forAccount(account);
                     DropboxRoot root = new DropboxRoot(fs);
                     mRoots.put(root.getId(), root);
@@ -169,6 +161,7 @@ public class DropboxProvider extends DocumentsProvider {
 
     @Override
     public PendingAction linkAccount() {
+        mRoots = null; // clear roots so that they are refreshed when requeried
         return new LinkAction(mAccountManager);
     }
 
@@ -184,6 +177,17 @@ public class DropboxProvider extends DocumentsProvider {
 
     public static void register(Context context) {
         DocumentsProviderRegistry.get().register(ID, new DropboxProvider(context));
+    }
+
+    private void waitForAccountInfo(DbxAccount account) {
+        try {
+            synchronized (account) {
+                account.addListener(mAccountListener);
+                account.wait();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private DbxFileSystem.ThumbSize getThumbnailSize(Point sizeHint) {
@@ -216,6 +220,13 @@ public class DropboxProvider extends DocumentsProvider {
 
     }
 
-
+    private DbxAccount.Listener mAccountListener = new DbxAccount.Listener() {
+        @Override
+        public void onAccountChange(DbxAccount dbxAccount) {
+            synchronized (dbxAccount) {
+                dbxAccount.notify();
+            }
+        }
+    };
 
 }
