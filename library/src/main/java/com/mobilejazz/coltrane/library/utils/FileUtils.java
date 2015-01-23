@@ -29,6 +29,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
@@ -388,11 +389,15 @@ public class FileUtils {
 
     public static void copyStream(InputStream input, OutputStream output) throws IOException
     {
-        byte[] buffer = new byte[1024]; // Adjust if you want
-        int bytesRead;
-        while ((bytesRead = input.read(buffer)) != -1)
-        {
-            output.write(buffer, 0, bytesRead);
+        try {
+            byte[] buffer = new byte[1024]; // Adjust if you want
+            int bytesRead;
+            while ((bytesRead = input.read(buffer)) != -1) {
+                output.write(buffer, 0, bytesRead);
+            }
+        } finally {
+            input.close();
+            output.close();
         }
     }
 
@@ -404,6 +409,20 @@ public class FileUtils {
         FileUtils.copyStream(urlConnection.getInputStream(), out);
         out.close();
         return file;
+    }
+
+    public static int getParcelModeFromString(String mode) {
+        if ("r".equals(mode)) {
+            return ParcelFileDescriptor.MODE_READ_ONLY;
+        } else if ("w".equals(mode)) {
+            return  ParcelFileDescriptor.MODE_WRITE_ONLY;
+        } else if ("rw".equals(mode)) {
+            return ParcelFileDescriptor.MODE_READ_WRITE;
+        } else if ("rwt".equals(mode)) {
+            return ParcelFileDescriptor.MODE_READ_WRITE | ParcelFileDescriptor.MODE_TRUNCATE;
+        } else {
+            throw new IllegalArgumentException("Unsupported mode: " + mode);
+        }
     }
 
 }

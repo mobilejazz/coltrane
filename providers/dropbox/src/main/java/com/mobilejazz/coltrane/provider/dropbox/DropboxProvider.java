@@ -30,6 +30,7 @@ import com.mobilejazz.coltrane.library.utils.thumbnail.Thumbnail;
 
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -105,8 +106,11 @@ public class DropboxProvider extends DocumentsProvider {
         try {
             Document d = new Document(mRoots, documentId);
             DbxFile file = d.getRoot().getFileSystem().open(d.getPath());
-            FileDescriptor fd = file.getReadStream().getFD();
-            return new DbxParcelFileDescriptor(ParcelFileDescriptor.dup(fd), file);
+            FileInputStream in = file.getReadStream();
+            ParcelFileDescriptor result = descriptorFromInputStream(documentId, in, mode);
+            file.close();
+            return result;
+            // TODO make this work: return new DbxParcelFileDescriptor(ParcelFileDescriptor.dup(fd), file);
         } catch (DbxException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         } catch (IOException e) {
@@ -115,7 +119,7 @@ public class DropboxProvider extends DocumentsProvider {
     }
 
     protected String getDocumentThumbnailId(final String documentId, final Point sizeHint) {
-        return Base64.encodeToString(documentId.getBytes(), Base64.URL_SAFE) + "_" + sizeHint.x + "_" + sizeHint.y;
+        return getTemporaryFileName(documentId) + "_" + sizeHint.x + "_" + sizeHint.y;
     }
 
     protected File getDocumentThumbnailFile(Document document, final Point sizeHint) throws FileNotFoundException {

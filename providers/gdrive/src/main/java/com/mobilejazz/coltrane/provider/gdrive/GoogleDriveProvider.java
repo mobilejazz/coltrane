@@ -232,16 +232,11 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                     d.getRoot().getDrive().getRequestFactory().buildGetRequest(new GenericUrl(file.getDownloadUrl()))
                             .execute();
 
-            java.io.File downloadedFile = java.io.File.createTempFile(documentId, "_thumbnail", getContext().getCacheDir());
+            java.io.File downloadedFile = java.io.File.createTempFile(documentId, "", getContext().getCacheDir());
             out = new FileOutputStream(downloadedFile);
             resp.download(out);
 
-            final boolean isWrite = (mode.indexOf('w') != -1);
-            if (isWrite) {
-                return ParcelFileDescriptor.open(downloadedFile, ParcelFileDescriptor.MODE_READ_WRITE);
-            } else {
-                return ParcelFileDescriptor.open(downloadedFile, ParcelFileDescriptor.MODE_READ_ONLY);
-            }
+            return descriptorFromFile(downloadedFile, mode);
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         }  catch (IOException e) {

@@ -108,12 +108,7 @@ public class FileSystemProvider extends DocumentsProvider {
     @Override
     public ParcelFileDescriptor openDocument(String documentId, String mode, CancellationSignal signal) throws FileNotFoundException {
         File file = new File(documentId);
-        final boolean isWrite = (mode.indexOf('w') != -1);
-        if (isWrite) {
-            return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_WRITE);
-        } else {
-            return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
-        }
+        return descriptorFromFile(file, mode);
     }
 
     protected String getDocumentThumbnailId(final String documentId, final Point sizeHint) {

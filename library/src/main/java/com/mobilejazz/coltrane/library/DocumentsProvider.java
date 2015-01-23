@@ -7,10 +7,16 @@ import android.graphics.Point;
 import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.ParcelFileDescriptor;
+import android.util.Base64;
 
 import com.mobilejazz.coltrane.library.action.PendingAction;
+import com.mobilejazz.coltrane.library.utils.FileUtils;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 
 public abstract class DocumentsProvider {
@@ -84,6 +90,29 @@ public abstract class DocumentsProvider {
 
     public boolean onCreate() {
         return true;
+    }
+
+    protected String getTemporaryFileName(String documentId) {
+        return Base64.encodeToString(documentId.getBytes(), Base64.URL_SAFE);
+    }
+
+    protected File getTemporaryFile(String documentId) throws IOException {
+        return File.createTempFile(getTemporaryFileName(documentId), "", getContext().getCacheDir());
+    }
+
+    protected File createTemporaryFileFrom(InputStream in, String documentId) throws IOException {
+        File file = getTemporaryFile(documentId);
+        FileUtils.copyStream(in, new FileOutputStream(file));
+        return file;
+    }
+
+    protected ParcelFileDescriptor descriptorFromFile(File file, String mode) throws FileNotFoundException {
+        return ParcelFileDescriptor.open(file, FileUtils.getParcelModeFromString(mode));
+    }
+
+    protected ParcelFileDescriptor descriptorFromInputStream(String documentId, InputStream in, String mode) throws IOException {
+        File tempFile = createTemporaryFileFrom(in, documentId);
+        return descriptorFromFile(tempFile, mode);
     }
 
 }
