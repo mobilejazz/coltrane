@@ -42,6 +42,8 @@ public class DropboxProvider extends DocumentsProvider {
     private DbxAccountManager mAccountManager;
     private Map<String, DropboxRoot> mRoots;
 
+    private boolean mRootsHaveChanged = false;
+
     public DropboxProvider(Context context) {
         super(context);
     }
@@ -55,7 +57,7 @@ public class DropboxProvider extends DocumentsProvider {
 
     @Override
     public Collection<? extends Root> getRoots() throws FileNotFoundException {
-        if (mRoots == null) {
+        if (mRoots == null || mRootsHaveChanged) {
             mRoots = new TreeMap<String, DropboxRoot>();
             try {
                 for (DbxAccount account : mAccountManager.getLinkedAccounts()) {
@@ -64,6 +66,7 @@ public class DropboxProvider extends DocumentsProvider {
                     DropboxRoot root = new DropboxRoot(fs);
                     mRoots.put(root.getId(), root);
                 }
+                mRootsHaveChanged = false;
             } catch (DbxException.Unauthorized e) {
                 throw new FileNotFoundException(e.getLocalizedMessage());
             }
@@ -159,10 +162,17 @@ public class DropboxProvider extends DocumentsProvider {
         return ID;
     }
 
+    DbxAccountManager getAccountManager() {
+        return mAccountManager;
+    }
+
+    void resetRoots() {
+        mRootsHaveChanged = true; // clear roots so that they are refreshed when requeried
+    }
+
     @Override
     public PendingAction linkAccount() {
-        mRoots = null; // clear roots so that they are refreshed when requeried
-        return new LinkAction(mAccountManager);
+        return new LinkAction(this);
     }
 
     @Override
@@ -182,6 +192,8 @@ public class DropboxProvider extends DocumentsProvider {
     private void waitForAccountInfo(DbxAccount account) {
         try {
             synchronized (account) {
+                if (account.getAccountInfo() != null)
+                    return;
                 account.addListener(mAccountListener);
                 account.wait();
             }

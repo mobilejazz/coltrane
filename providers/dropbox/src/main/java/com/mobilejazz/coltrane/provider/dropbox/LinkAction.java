@@ -8,19 +8,21 @@ import com.mobilejazz.coltrane.library.action.PendingAction;
 
 public class LinkAction implements PendingAction {
 
-    private DbxAccountManager mDbxAcctMgr;
+    private DropboxProvider mProvider;
 
-    public LinkAction(DbxAccountManager dbxAcctMgr) {
-        mDbxAcctMgr = dbxAcctMgr;
+    public LinkAction(DropboxProvider provider) {
+        mProvider = provider;
     }
 
     @Override
     public void performWith(Activity activity, int callbackRequestCode) {
-        mDbxAcctMgr.startLink(activity, callbackRequestCode);
+        mProvider.getAccountManager().startLink(activity, callbackRequestCode);
+        mProvider.resetRoots();
     }
 
     @Override
     public void performWith(Fragment fragment, int callbackRequestCode) {
-        mDbxAcctMgr.startLink(fragment, callbackRequestCode);
+        mProvider.getAccountManager().startLink(fragment, callbackRequestCode);
+        mProvider.resetRoots();
     }
 }
