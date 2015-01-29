@@ -258,7 +258,11 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             Document d = new Document(mRoots, documentId);
             File file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
             String thumbnailLink = file.getThumbnailLink();
-            return Uri.parse(thumbnailLink.substring(0, thumbnailLink.length() - 4) + "s" + Math.max(sizeHint.x, sizeHint.y));
+            if (TextUtils.isEmpty(thumbnailLink)) {
+                return null;
+            } else {
+                return Uri.parse(thumbnailLink.substring(0, thumbnailLink.length() - 4) + "s" + Math.max(sizeHint.x, sizeHint.y));
+            }
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         }  catch (IOException e) {

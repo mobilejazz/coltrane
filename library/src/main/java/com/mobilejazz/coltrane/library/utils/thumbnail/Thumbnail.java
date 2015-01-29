@@ -1,22 +1,16 @@
 package com.mobilejazz.coltrane.library.utils.thumbnail;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
-import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 
-import com.mobilejazz.coltrane.library.utils.FileUtils;
 import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
 
 import net.sf.andpdf.nio.ByteBuffer;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -57,14 +51,14 @@ public class Thumbnail {
         InputStream is = null;
         try {
             // Get the size of the file
-            is = new FileInputStream(input.getFileDescriptor());
+            is = new ParcelFileDescriptor.AutoCloseInputStream(input);
 
             // Get the size of the file
             long length = input.getStatSize();
             byte[] bytes = new byte[(int) length];
             int offset = 0;
             int numRead = 0;
-            while (offset < bytes.length && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+            while (offset < bytes.length && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
                 offset += numRead;
             }
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
@@ -75,19 +69,22 @@ public class Thumbnail {
             float pageHeight = page.getHeight();
 
             float aspectRatio = pageWidth / pageHeight;
-            float desiredAspectRatio = (float)sizeHint.x / (float)sizeHint.y;
+            float desiredAspectRatio = (float) sizeHint.x / (float) sizeHint.y;
 
             int w, h;
             if (aspectRatio > desiredAspectRatio) {
                 w = sizeHint.x;
-                h = (int)(w / aspectRatio);
+                h = (int) (w / aspectRatio);
             } else {
                 h = sizeHint.y;
-                w = (int)(h * aspectRatio);
+                w = (int) (h * aspectRatio);
             }
 
             return page.getImage(w, h, null, true, true);
 
+        } catch (Exception e) {
+            // something went wrong:
+            return null;
         } finally {
             is.close();
         }

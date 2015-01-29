@@ -122,9 +122,13 @@ public class FileSystemProvider extends DocumentsProvider {
             File thumbnail = File.createTempFile(getDocumentThumbnailId(documentId, sizeHint), "", cacheDir);
             String mimeType = mAccessor.getMimeType(new File(documentId));
             Bitmap bitmap = Thumbnail.fromFile(documentId, sizeHint, mimeType);
-            out = new FileOutputStream(thumbnail);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
-            return thumbnail;
+            if (bitmap != null) {
+                out = new FileOutputStream(thumbnail);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+                return thumbnail;
+            } else {
+                return null;
+            }
         } catch (IOException e) {
             Timber.e("Error writing thumbnail", e);
             return null;
@@ -140,24 +144,13 @@ public class FileSystemProvider extends DocumentsProvider {
 
     @Override
     public Uri getDocumentThumbnailUri(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
-        return Uri.fromFile(getDocumentThumbnailFile(documentId, sizeHint));
+        File thumbnailFile = getDocumentThumbnailFile(documentId, sizeHint);
+        if (thumbnailFile != null) {
+            return Uri.fromFile(thumbnailFile);
+        } else {
+            return null;
+        }
     }
-
-//    public String getDocumentType(final String documentId) throws FileNotFoundException {
-//        File file = new File(documentId);
-//        if (file.isDirectory())
-//            return DocumentsContract.Document.MIME_TYPE_DIR;
-//        // From FileProvider.getType(Uri)
-//        final int lastDot = file.getName().lastIndexOf('.');
-//        if (lastDot >= 0) {
-//            final String extension = file.getName().substring(lastDot + 1);
-//            final String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-//            if (mime != null) {
-//                return mime;
-//            }
-//        }
-//        return "application/octet-stream";
-//    }
 
     @Override
     public String createDocument(String parentDocumentId, String mimeType, String displayName) throws FileNotFoundException {
