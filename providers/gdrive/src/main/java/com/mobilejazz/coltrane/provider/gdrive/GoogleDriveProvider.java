@@ -27,6 +27,7 @@ import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
+import com.mobilejazz.coltrane.library.action.IntentPendingAction;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
 import com.mobilejazz.coltrane.library.utils.ListCursor;
 
@@ -198,7 +199,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             }
             return new ListCursor<File>(files, d.getAccessor(), projection, sortOrder);
         } catch (UserRecoverableAuthIOException e) {
-            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         } catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
@@ -215,7 +216,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             }
             return new ListCursor<File>(Collections.singletonList(file), d.getAccessor(), projection, null);
         } catch (UserRecoverableAuthIOException e) {
-            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         }  catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
@@ -231,18 +232,13 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                     d.getRoot().getDrive().getRequestFactory().buildGetRequest(new GenericUrl(file.getDownloadUrl()))
                             .execute();
 
-            java.io.File downloadedFile = java.io.File.createTempFile(documentId, "_thumbnail", getContext().getCacheDir());
+            java.io.File downloadedFile = java.io.File.createTempFile(documentId, "", getContext().getCacheDir());
             out = new FileOutputStream(downloadedFile);
             resp.download(out);
 
-            final boolean isWrite = (mode.indexOf('w') != -1);
-            if (isWrite) {
-                return ParcelFileDescriptor.open(downloadedFile, ParcelFileDescriptor.MODE_READ_WRITE);
-            } else {
-                return ParcelFileDescriptor.open(downloadedFile, ParcelFileDescriptor.MODE_READ_ONLY);
-            }
+            return descriptorFromFile(downloadedFile, mode);
         } catch (UserRecoverableAuthIOException e) {
-            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         }  catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         } finally {
@@ -262,9 +258,13 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
             Document d = new Document(mRoots, documentId);
             File file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
             String thumbnailLink = file.getThumbnailLink();
-            return Uri.parse(thumbnailLink.substring(0, thumbnailLink.length() - 4) + "s" + Math.max(sizeHint.x, sizeHint.y));
+            if (TextUtils.isEmpty(thumbnailLink)) {
+                return null;
+            } else {
+                return Uri.parse(thumbnailLink.substring(0, thumbnailLink.length() - 4) + "s" + Math.max(sizeHint.x, sizeHint.y));
+            }
         } catch (UserRecoverableAuthIOException e) {
-            throw new UserRecoverableException(e.getLocalizedMessage(), e, e.getIntent());
+            throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         }  catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
@@ -292,6 +292,16 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
 
     public static void register(Context context) {
         DocumentsProviderRegistry.get().register(ID, new GoogleDriveProvider(context));
+    }
+
+    @Override
+    public String getName() {
+        return getContext().getString(R.string.gdrive_name);
+    }
+
+    @Override
+    public int getIcon() {
+        return R.drawable.ic_provider_gdrive;
     }
 
 }

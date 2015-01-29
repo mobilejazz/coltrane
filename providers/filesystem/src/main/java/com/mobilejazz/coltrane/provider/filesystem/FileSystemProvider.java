@@ -1,7 +1,6 @@
 package com.mobilejazz.coltrane.provider.filesystem;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Point;
@@ -11,14 +10,12 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.BaseColumns;
 import android.util.Base64;
-import android.webkit.MimeTypeMap;
 
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.Root;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
 import com.mobilejazz.coltrane.library.compatibility.DocumentsContract;
-import com.mobilejazz.coltrane.library.compatibility.MatrixCursor;
 import com.mobilejazz.coltrane.library.utils.DocumentCursor;
 import com.mobilejazz.coltrane.library.utils.ListCursor;
 import com.mobilejazz.coltrane.library.utils.thumbnail.Thumbnail;
@@ -68,7 +65,7 @@ public class FileSystemProvider extends DocumentsProvider {
                     homeDir.getAbsolutePath(),
                     homeDir.getAbsolutePath(),
                     getContext().getString(R.string.internal_storage),
-                    R.drawable.ic_provider,
+                    R.drawable.ic_provider_filesystem,
                     homeDir.getFreeSpace(),
                     DocumentsContract.Root.FLAG_LOCAL_ONLY | DocumentsContract.Root.FLAG_SUPPORTS_CREATE);
 
@@ -77,6 +74,16 @@ public class FileSystemProvider extends DocumentsProvider {
         } else {
             return Collections.emptyList();
         }
+    }
+
+    @Override
+    public String getName() {
+        return getContext().getString(R.string.filesystem_name);
+    }
+
+    @Override
+    public int getIcon() {
+        return R.drawable.ic_provider_filesystem;
     }
 
     @Override
@@ -101,12 +108,7 @@ public class FileSystemProvider extends DocumentsProvider {
     @Override
     public ParcelFileDescriptor openDocument(String documentId, String mode, CancellationSignal signal) throws FileNotFoundException {
         File file = new File(documentId);
-        final boolean isWrite = (mode.indexOf('w') != -1);
-        if (isWrite) {
-            return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_WRITE);
-        } else {
-            return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
-        }
+        return descriptorFromFile(file, mode);
     }
 
     protected String getDocumentThumbnailId(final String documentId, final Point sizeHint) {
@@ -116,13 +118,17 @@ public class FileSystemProvider extends DocumentsProvider {
     protected File getDocumentThumbnailFile(final String documentId, final Point sizeHint) throws FileNotFoundException {
         FileOutputStream out = null;
         try {
-            File cacheDir = getContext().getCacheDir();
-            File thumbnail = File.createTempFile(getDocumentThumbnailId(documentId, sizeHint), "", cacheDir);
-            String mimeType = new DocumentCursor(queryDocument(documentId, new String[]{DocumentsContract.Document.COLUMN_MIME_TYPE})).getMimeType();
+            String mimeType = mAccessor.getMimeType(new File(documentId));
             Bitmap bitmap = Thumbnail.fromFile(documentId, sizeHint, mimeType);
-            out = new FileOutputStream(thumbnail);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
-            return thumbnail;
+            if (bitmap != null) {
+                File cacheDir = getContext().getCacheDir();
+                File thumbnail = File.createTempFile(getDocumentThumbnailId(documentId, sizeHint), "", cacheDir);
+                out = new FileOutputStream(thumbnail);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+                return thumbnail;
+            } else {
+                return null;
+            }
         } catch (IOException e) {
             Timber.e("Error writing thumbnail", e);
             return null;
@@ -138,24 +144,13 @@ public class FileSystemProvider extends DocumentsProvider {
 
     @Override
     public Uri getDocumentThumbnailUri(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
-        return Uri.fromFile(getDocumentThumbnailFile(documentId, sizeHint));
+        File thumbnailFile = getDocumentThumbnailFile(documentId, sizeHint);
+        if (thumbnailFile != null) {
+            return Uri.fromFile(thumbnailFile);
+        } else {
+            return null;
+        }
     }
-
-//    public String getDocumentType(final String documentId) throws FileNotFoundException {
-//        File file = new File(documentId);
-//        if (file.isDirectory())
-//            return DocumentsContract.Document.MIME_TYPE_DIR;
-//        // From FileProvider.getType(Uri)
-//        final int lastDot = file.getName().lastIndexOf('.');
-//        if (lastDot >= 0) {
-//            final String extension = file.getName().substring(lastDot + 1);
-//            final String mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-//            if (mime != null) {
-//                return mime;
-//            }
-//        }
-//        return "application/octet-stream";
-//    }
 
     @Override
     public String createDocument(String parentDocumentId, String mimeType, String displayName) throws FileNotFoundException {
