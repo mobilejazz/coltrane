@@ -84,6 +84,7 @@ public class Thumbnail {
 
         } catch (Exception e) {
             // something went wrong:
+            e.printStackTrace();
             return null;
         } finally {
             is.close();

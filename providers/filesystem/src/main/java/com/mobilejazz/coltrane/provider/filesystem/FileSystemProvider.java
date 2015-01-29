@@ -118,11 +118,11 @@ public class FileSystemProvider extends DocumentsProvider {
     protected File getDocumentThumbnailFile(final String documentId, final Point sizeHint) throws FileNotFoundException {
         FileOutputStream out = null;
         try {
-            File cacheDir = getContext().getCacheDir();
-            File thumbnail = File.createTempFile(getDocumentThumbnailId(documentId, sizeHint), "", cacheDir);
             String mimeType = mAccessor.getMimeType(new File(documentId));
             Bitmap bitmap = Thumbnail.fromFile(documentId, sizeHint, mimeType);
             if (bitmap != null) {
+                File cacheDir = getContext().getCacheDir();
+                File thumbnail = File.createTempFile(getDocumentThumbnailId(documentId, sizeHint), "", cacheDir);
                 out = new FileOutputStream(thumbnail);
                 bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
                 return thumbnail;
