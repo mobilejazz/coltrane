@@ -111,45 +111,10 @@ public class FileSystemProvider extends DocumentsProvider {
         return descriptorFromFile(file, mode);
     }
 
-    protected String getDocumentThumbnailId(final String documentId, final Point sizeHint) {
-        return Base64.encodeToString(documentId.getBytes(), Base64.URL_SAFE) + "_" + sizeHint.x + "_" + sizeHint.y;
-    }
-
-    protected File getDocumentThumbnailFile(final String documentId, final Point sizeHint) throws FileNotFoundException {
-        FileOutputStream out = null;
-        try {
-            String mimeType = mAccessor.getMimeType(new File(documentId));
-            Bitmap bitmap = Thumbnail.fromFile(documentId, sizeHint, mimeType);
-            if (bitmap != null) {
-                File cacheDir = getContext().getCacheDir();
-                File thumbnail = File.createTempFile(getDocumentThumbnailId(documentId, sizeHint), "", cacheDir);
-                out = new FileOutputStream(thumbnail);
-                bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
-                return thumbnail;
-            } else {
-                return null;
-            }
-        } catch (IOException e) {
-            Timber.e("Error writing thumbnail", e);
-            return null;
-        } finally {
-            if (out != null)
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    Timber.e("Error closing thumbnail", e);
-                }
-        }
-    }
-
     @Override
     public Uri getDocumentThumbnailUri(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
-        File thumbnailFile = getDocumentThumbnailFile(documentId, sizeHint);
-        if (thumbnailFile != null) {
-            return Uri.fromFile(thumbnailFile);
-        } else {
-            return null;
-        }
+        File f = new File(documentId);
+        return Thumbnail.getDocumentThumbnailUri(getContext(), f, documentId, mAccessor.getMimeType(f), sizeHint);
     }
 
     @Override

@@ -22,6 +22,7 @@ import android.widget.Toast;
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
+import com.mobilejazz.coltrane.library.utils.MimeIcon;
 import com.mobilejazz.coltrane.ui.DocumentBrowserActivity;
 import com.squareup.picasso.Picasso;
 
@@ -45,7 +46,7 @@ public class FileDetailActivity extends Activity {
         mProvider = DocumentsProviderRegistry.get().getProvider(getIntent().getStringExtra(DocumentBrowserActivity.EXTRA_PROVIDER));
         mDocumentId = getIntent().getStringExtra(DocumentBrowserActivity.EXTRA_DOCUMENT_ID);
 
-        mImageView = (ImageView)findViewById(R.id.thumbnail);
+        mImageView = (ImageView) findViewById(R.id.thumbnail);
 
         mImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -84,10 +85,11 @@ public class FileDetailActivity extends Activity {
                     @Override
                     protected void onPostExecute(Uri uri) {
                         super.onPostExecute(uri);
-                        Picasso.with(FileDetailActivity.this).load(uri).into(mImageView);}
+                        Picasso.with(FileDetailActivity.this).load(uri).into(mImageView);
+                    }
                 }.execute();
 
-                if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
                     mImageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                 } else {
                     mImageView.getViewTreeObserver().removeGlobalOnLayoutListener(this);

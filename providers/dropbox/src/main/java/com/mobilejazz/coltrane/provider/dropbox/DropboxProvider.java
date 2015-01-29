@@ -21,6 +21,7 @@ import com.mobilejazz.coltrane.library.UserRecoverableException;
 import com.mobilejazz.coltrane.library.action.PendingAction;
 import com.mobilejazz.coltrane.library.utils.FileUtils;
 import com.mobilejazz.coltrane.library.utils.ListCursor;
+import com.mobilejazz.coltrane.library.utils.thumbnail.Thumbnail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -147,12 +148,18 @@ public class DropboxProvider extends DocumentsProvider {
     public Uri getDocumentThumbnailUri(String documentId, Point sizeHint, CancellationSignal signal) throws FileNotFoundException, UserRecoverableException {
         try {
             Document d = new Document(mRoots, documentId);
-            if (d.getRoot().getFileSystem().getFileInfo(d.getPath()).thumbExists) {
+            DbxFileInfo info = d.getRoot().getFileSystem().getFileInfo(d.getPath());
+            if (info.thumbExists) {
                 return Uri.fromFile(getDocumentThumbnailFile(d, sizeHint));
             } else {
-                return null;
+                DbxFile file = d.getRoot().getFileSystem().open(d.getPath());
+                File f = createTemporaryFileFrom(file.getReadStream(), documentId);
+                file.close();
+                return Thumbnail.getDocumentThumbnailUri(getContext(), f, documentId, d.getAccessor().getMimeType(info), sizeHint);
             }
         } catch (DbxException e) {
+            throw new FileNotFoundException(e.getLocalizedMessage());
+        } catch (IOException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
     }
