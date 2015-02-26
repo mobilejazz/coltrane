@@ -63,6 +63,7 @@ public class DocumentBrowserActivity extends Activity implements
     private static final int REQUEST_NEW_ACCOUNT = 35093;
 
     public static final String PATH = "com.mobilejazz.coltrane.ui.browser.path";
+    public static final String FILTER = "com.mobilejazz.coltrane.ui.browser.filter";
     public static final String SELECTED_ITEM = "com.mobilejazz.coltrane.ui.browser.selected";
 
     public static final String EXTRA_PROVIDER = "com.mobilejazz.coltrane.ui.browser.result.provider";

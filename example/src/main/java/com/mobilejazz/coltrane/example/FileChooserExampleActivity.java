@@ -42,6 +42,7 @@ public class FileChooserExampleActivity extends Activity {
 
     private void openCustomUI() {
         Intent selectFile = new Intent(this, DocumentBrowserActivity.class);
+        selectFile.putExtra(DocumentBrowserActivity.FILTER, "application/pdf");
         startActivityForResult(selectFile, REQUEST_CODE);
     }
 

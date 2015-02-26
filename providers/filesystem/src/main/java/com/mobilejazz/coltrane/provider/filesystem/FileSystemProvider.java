@@ -87,7 +87,7 @@ public class FileSystemProvider extends DocumentsProvider {
     }
 
     @Override
-    public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException {
+    public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder, String mimeFilter) throws FileNotFoundException {
         final File parent = new File(parentDocumentId);
         List<File> files = new ArrayList<File>();
         for (File file : parent.listFiles()) {
@@ -97,12 +97,12 @@ public class FileSystemProvider extends DocumentsProvider {
                 files.add(file);
             }
         }
-        return new ListCursor<File>(files, mAccessor, projection, sortOrder);
+        return new ListCursor<File>(files, mAccessor, projection, sortOrder, mimeFilter);
     }
 
     @Override
     public Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException {
-        return new ListCursor<File>(Collections.singletonList(new File(documentId)), mAccessor, projection, null);
+        return new ListCursor<File>(Collections.singletonList(new File(documentId)), mAccessor, projection, null, null);
     }
 
     @Override

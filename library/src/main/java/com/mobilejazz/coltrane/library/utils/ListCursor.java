@@ -29,7 +29,7 @@ public class ListCursor<T> extends MatrixCursor {
     private DocumentAccessor<T> mAccessor;
     private HashMap<String, ValueGetter<? extends Comparable, T>> mValueGetters;
 
-    public ListCursor(List<T> items, DocumentAccessor<T> accessor, String[] projection, String sortOrder) {
+    public ListCursor(List<T> items, DocumentAccessor<T> accessor, String[] projection, String sortOrder, String mimeFilter) {
         super(projection != null ? projection : sColumnNames, items.size());
         mAccessor = accessor;
 
@@ -70,16 +70,19 @@ public class ListCursor<T> extends MatrixCursor {
             Collections.sort(items, new ItemComparator(sortOrder));
         }
         for (T i : items) {
-            RowBuilder row = newRow();
-            row.add(BaseColumns._ID, index++);
-            row.add(Document.COLUMN_DOCUMENT_ID, accessor.getDocumentId(i));
-            row.add(Document.COLUMN_MIME_TYPE, accessor.getMimeType(i));
-            row.add(Document.COLUMN_DISPLAY_NAME, accessor.getDisplayName(i));
-            row.add(Document.COLUMN_SUMMARY, accessor.getSummary(i));
-            row.add(Document.COLUMN_LAST_MODIFIED, accessor.getLastModified(i));
-            row.add(Document.COLUMN_ICON, accessor.getIcon(i));
-            row.add(Document.COLUMN_FLAGS, accessor.getFlags(i));
-            row.add(Document.COLUMN_SIZE, accessor.getSize(i));
+            String mimeType = accessor.getMimeType(i);
+            if (mimeFilter == null || accessor.isFolder(i) || mimeFilter.equals(mimeType)) {
+                RowBuilder row = newRow();
+                row.add(BaseColumns._ID, index++);
+                row.add(Document.COLUMN_DOCUMENT_ID, accessor.getDocumentId(i));
+                row.add(Document.COLUMN_MIME_TYPE, mimeType);
+                row.add(Document.COLUMN_DISPLAY_NAME, accessor.getDisplayName(i));
+                row.add(Document.COLUMN_SUMMARY, accessor.getSummary(i));
+                row.add(Document.COLUMN_LAST_MODIFIED, accessor.getLastModified(i));
+                row.add(Document.COLUMN_ICON, accessor.getIcon(i));
+                row.add(Document.COLUMN_FLAGS, accessor.getFlags(i));
+                row.add(Document.COLUMN_SIZE, accessor.getSize(i));
+            }
         }
     }
 

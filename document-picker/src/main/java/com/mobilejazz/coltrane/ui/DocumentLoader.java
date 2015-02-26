@@ -41,10 +41,13 @@ public class DocumentLoader extends AsyncTaskLoader<Cursor> {
 
     private PendingAction mPendingAction;
 
-	public DocumentLoader(Context context, DocumentsProvider provider, String parentDocumentId) {
+    private String mMimeTypeFilter;
+
+	public DocumentLoader(Context context, DocumentsProvider provider, String parentDocumentId, String mimeTypeFilter) {
 		super(context);
         this.mProvider = provider;
 		this.mParentDocumentId = parentDocumentId;
+        this.mMimeTypeFilter = mimeTypeFilter;
 
         // run only once
         onContentChanged();
@@ -68,7 +71,7 @@ public class DocumentLoader extends AsyncTaskLoader<Cursor> {
     @Override
 	public Cursor loadInBackground() {
         try {
-            return mProvider.queryChildDocuments(mParentDocumentId, null, DocumentsContract.Document.COLUMN_DISPLAY_NAME);
+            return mProvider.queryChildDocuments(mParentDocumentId, null, DocumentsContract.Document.COLUMN_DISPLAY_NAME, mMimeTypeFilter);
         } catch (FileNotFoundException e) {
             return null;
         } catch (UserRecoverableException e) {

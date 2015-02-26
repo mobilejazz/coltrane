@@ -190,7 +190,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
     }
 
     @Override
-    public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException, UserRecoverableException {
+    public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder, String mimeFilter) throws FileNotFoundException, UserRecoverableException {
         try {
             Document d = new Document(mRoots, parentDocumentId);
             List<File> files = mChildrenCache.get(parentDocumentId);
@@ -198,7 +198,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                 files = d.getRoot().getDrive().files().list().setQ("'" + d.getDriveId() + "'" + " in parents and trashed=false and not (mimeType != 'application/vnd.google-apps.folder' and mimeType contains 'application/vnd.google-apps')").execute().getItems();
                 mChildrenCache.put(parentDocumentId, files);
             }
-            return new ListCursor<File>(files, d.getAccessor(), projection, sortOrder);
+            return new ListCursor<File>(files, d.getAccessor(), projection, sortOrder, mimeFilter);
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         } catch (IOException e) {
@@ -215,7 +215,7 @@ public class GoogleDriveProvider extends DocumentsProvider implements GoogleApiC
                 file = d.getRoot().getDrive().files().get(d.getDriveId()).execute();
                 mDocumentCache.put(documentId, file);
             }
-            return new ListCursor<File>(Collections.singletonList(file), d.getAccessor(), projection, null);
+            return new ListCursor<File>(Collections.singletonList(file), d.getAccessor(), projection, null, null);
         } catch (UserRecoverableAuthIOException e) {
             throw new UserRecoverableException(e.getLocalizedMessage(), e, new IntentPendingAction(e.getIntent()));
         } catch (IOException e) {

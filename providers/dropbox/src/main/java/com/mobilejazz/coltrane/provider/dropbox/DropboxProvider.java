@@ -76,11 +76,11 @@ public class DropboxProvider extends DocumentsProvider {
     }
 
     @Override
-    public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException, UserRecoverableException {
+    public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder, String mimeFilter) throws FileNotFoundException, UserRecoverableException {
         try {
             Document d = new Document(mRoots, parentDocumentId);
             List<DbxFileInfo> files = d.getRoot().getFileSystem().listFolder(d.getPath());
-            return new ListCursor<DbxFileInfo>(files, d.getAccessor(), projection, sortOrder);
+            return new ListCursor<DbxFileInfo>(files, d.getAccessor(), projection, sortOrder, mimeFilter);
         } catch (DbxException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }
@@ -91,7 +91,7 @@ public class DropboxProvider extends DocumentsProvider {
         try {
             Document d = new Document(mRoots, documentId);
             DbxFileInfo file = d.getRoot().getFileSystem().getFileInfo(d.getPath());
-            return new ListCursor<DbxFileInfo>(Collections.singletonList(file), d.getAccessor(), projection, null);
+            return new ListCursor<DbxFileInfo>(Collections.singletonList(file), d.getAccessor(), projection, null, null);
         } catch (DbxException e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
         }

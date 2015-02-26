@@ -71,7 +71,7 @@ public abstract class NativeDocumentsProvider extends android.provider.Documents
     @Override
     public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException {
         try {
-            return getDelegate().queryChildDocuments(parentDocumentId, projection, sortOrder);
+            return getDelegate().queryChildDocuments(parentDocumentId, projection, sortOrder, null);
         } catch (UserRecoverableException e) {
             throw new FileNotFoundException(e.getLocalizedMessage()); // TODO
         }

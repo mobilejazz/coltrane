@@ -65,6 +65,8 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
     private DocumentsProvider mProvider;
     private String mCurrentDocumentId;
 
+    private String mMimeTypeFilter;
+
     private Callbacks mListener;
 
     private View mPendingActionView;
@@ -112,6 +114,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
         String providerId = getArguments().getString(PROVIDER);
         mProvider = DocumentsProviderRegistry.get().getProvider(providerId);
         mCurrentDocumentId = getArguments().getString(DocumentBrowserActivity.PATH);
+        mMimeTypeFilter = getActivity().getIntent().getStringExtra(DocumentBrowserActivity.FILTER);
     }
 
     @Override
@@ -173,7 +176,7 @@ public class DocumentListFragment extends ListFragment implements LoaderManager.
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new DocumentLoader(getActivity(), mProvider, mCurrentDocumentId);
+        return new DocumentLoader(getActivity(), mProvider, mCurrentDocumentId, mMimeTypeFilter);
     }
 
     @Override

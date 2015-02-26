@@ -40,7 +40,7 @@ public abstract class DocumentsProvider {
         mContext = context;
     }
 
-    public abstract Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException, UserRecoverableException;
+    public abstract Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder, String mimeFilter) throws FileNotFoundException, UserRecoverableException;
 
     public abstract Cursor queryDocument(String documentId, String[] projection) throws FileNotFoundException, UserRecoverableException;
 
