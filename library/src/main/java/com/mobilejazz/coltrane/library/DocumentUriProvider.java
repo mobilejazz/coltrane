@@ -55,7 +55,14 @@ public class DocumentUriProvider extends ContentProvider {
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        throw new UnsupportedOperationException("No external queries");
+        DocumentUri documentUri = new DocumentUri(uri);
+        try {
+            return documentUri.provider.queryDocument(documentUri.documentId, projection);
+        } catch (FileNotFoundException e) {
+            return null;
+        } catch (UserRecoverableException e) {
+            return null;
+        }
     }
 
     @Override
