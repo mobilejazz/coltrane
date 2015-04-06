@@ -45,14 +45,19 @@ public class DropboxProvider extends DocumentsProvider {
 
     private boolean mRootsHaveChanged = false;
 
-    public DropboxProvider(Context context) {
+    private String mApiKey;
+    private String mApiSecret;
+
+    public DropboxProvider(Context context, String apiKey, String apiSecret) {
         super(context);
+        mApiKey = apiKey;
+        mApiSecret = apiSecret;
     }
 
     @Override
     public boolean onCreate() {
         super.onCreate();
-        mAccountManager = DbxAccountManager.getInstance(getContext(), getContext().getString(R.string.dropbox_api_key), getContext().getString(R.string.dropbox_api_secret));
+        mAccountManager = DbxAccountManager.getInstance(getContext(), mApiKey, mApiSecret);
         return true;
     }
 
@@ -192,8 +197,8 @@ public class DropboxProvider extends DocumentsProvider {
         return R.drawable.ic_provider_dropbox;
     }
 
-    public static void register(Context context) {
-        DocumentsProviderRegistry.get().register(ID, new DropboxProvider(context));
+    public static void register(Context context, String apiKey, String apiSecret) {
+        DocumentsProviderRegistry.get().register(ID, new DropboxProvider(context, apiKey, apiSecret));
     }
 
     private void waitForAccountInfo(DbxAccount account) {

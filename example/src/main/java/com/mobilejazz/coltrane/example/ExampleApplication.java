@@ -22,7 +22,6 @@ public class ExampleApplication extends Application {
 
         FileSystemProvider.register(getApplicationContext());
         GoogleDriveProvider.register(getApplicationContext());
-        DropboxProvider.register(getApplicationContext());
     }
 
     /**
