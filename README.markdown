@@ -22,9 +22,9 @@ your gradle build file should have the following dependencies:
 
 ```gradle
 compile 'com.android.support:appcompat-v7:21.0.2'
-compile 'com.mobilejazz.coltrane:coltrane:0.1.0-SNAPSHOT@aar'
-compile 'com.mobilejazz.coltrane:coltrane-provider-filesystem:0.1.0-SNAPSHOT@aar'
-compile 'com.mobilejazz.coltrane:coltrane-ui:0.1.0-SNAPSHOT@aar'
+compile 'com.mobilejazz.coltrane:coltrane:0.1.11-SNAPSHOT@aar'
+compile 'com.mobilejazz.coltrane:coltrane-provider-filesystem:0.1.11-SNAPSHOT@aar'
+compile 'com.mobilejazz.coltrane:coltrane-ui:0.1.11-SNAPSHOT@aar'
 ```
 
 Currently only these modules are available.
@@ -196,7 +196,7 @@ Currently the library provides out of the box plugins for the following provider
 This provider allows to browse and access files from the device's sd card. It can be setup by adding:
 
 ```gradle
-compile 'com.mobilejazz.coltrane:coltrane-provider-filesystem:0.1.0-SNAPSHOT@aar'
+compile 'com.mobilejazz.coltrane:coltrane-provider-filesystem:0.1.11-SNAPSHOT@aar'
 ```
 
 to your gradle build file and
@@ -214,7 +214,7 @@ library provides only one default UI out of the box. It resembles the behaviour 
 storage access framework UI on Lollipop devices. You can add it by adding
 
 ```gradle
-compile 'com.mobilejazz.coltrane:coltrane-ui:0.1.0-SNAPSHOT@aar'
+compile 'com.mobilejazz.coltrane:coltrane-ui:0.1.11-SNAPSHOT@aar'
 ```
 
 to your gradle build file and
@@ -269,7 +269,7 @@ The main library defines the interfaces and compatibility classes. Irrespective 
 you decide to use, it must be always added to the project by adding:
 
 ```gradle
-compile 'com.mobilejazz.coltrane:coltrane:0.1.0-SNAPSHOT@aar'
+compile 'com.mobilejazz.coltrane:coltrane:0.1.11-SNAPSHOT@aar'
 ```
 
 to your gradle build file.
