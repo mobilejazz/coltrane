@@ -63,6 +63,13 @@
             </intent-filter>
         </provider>
 
+        <provider
+            android:name="com.mobilejazz.coltrane.library.DocumentUriProvider"
+            android:authorities="${applicationId}.documentUriProvider"
+            android:exported="true"
+            android:enabled="true">
+        </provider>
+
         <activity
             android:name=".FileDetailActivity"
             android:label="@string/title_activity_file_detail"

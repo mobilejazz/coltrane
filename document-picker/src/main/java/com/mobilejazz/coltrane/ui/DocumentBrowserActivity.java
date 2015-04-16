@@ -70,6 +70,8 @@ public class DocumentBrowserActivity extends Activity implements
     public static final String EXTRA_DOCUMENT_ID = "com.mobilejazz.coltrane.ui.browser.result.document.id";
     public static final String EXTRA_DOCUMENT_NAME = "com.mobilejazz.coltrane.ui.browser.result.document.name";
 
+    public static final String DOCUMENT_URI_PROVIDER_AUTHORITY = BuildConfig.APPLICATION_ID + ".documentUriProvider";
+
     public static final String RESULT_ID = DocumentsContract.Document.COLUMN_DOCUMENT_ID;
 
     private FragmentManager mFragmentManager;
@@ -317,7 +319,7 @@ public class DocumentBrowserActivity extends Activity implements
         String providerId = mRoot.getProvider().getId();
         String documentId = document.getId();
 
-        i.setDataAndType(DocumentUriProvider.getUri(this, providerId, documentId), document.getMimeType());
+        i.setDataAndType(DocumentUriProvider.getUri(DOCUMENT_URI_PROVIDER_AUTHORITY, providerId, documentId), document.getMimeType());
         i.putExtra(EXTRA_PROVIDER, providerId);
         i.putExtra(EXTRA_DOCUMENT_ID, documentId);
         i.putExtra(EXTRA_DOCUMENT_NAME, document.getName());

@@ -2,7 +2,6 @@ package com.mobilejazz.coltrane.library;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.CancellationSignal;
@@ -14,8 +13,6 @@ import java.io.FileNotFoundException;
 import java.util.List;
 
 public class DocumentUriProvider extends ContentProvider {
-
-    public static final String AUTHORITY = BuildConfig.APPLICATION_ID + ".documentUriProvider";
 
     private static class DocumentUri {
 
@@ -100,12 +97,8 @@ public class DocumentUriProvider extends ContentProvider {
         }
     }
 
-    public static Uri getUri(Context c, String providerId, String documentId) {
-        return new Uri.Builder().scheme("content").authority(getAuthority(c)).appendPath(providerId).appendPath(documentId).build();
-    }
-
-    protected static String getAuthority(Context c) {
-        return AUTHORITY;
+    public static Uri getUri(String authority, String providerId, String documentId) {
+        return new Uri.Builder().scheme("content").authority(authority).appendPath(providerId).appendPath(documentId).build();
     }
 
 }
