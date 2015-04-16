@@ -26,7 +26,7 @@
     <application>
         <provider
             android:name="com.mobilejazz.coltrane.library.DocumentUriProvider"
-            android:authorities="@string/document_uri_authority"
+            android:authorities="${applicationId}.documentUriProvider"
             android:exported="true"
             android:enabled="true">
         </provider>

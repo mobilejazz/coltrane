@@ -15,7 +15,7 @@ import java.util.List;
 
 public class DocumentUriProvider extends ContentProvider {
 
-    public static final String AUTHORITY = "com.mobilejazz.coltrane.library.provider";
+    public static final String AUTHORITY = BuildConfig.APPLICATION_ID + ".documentUriProvider";
 
     private static class DocumentUri {
 
@@ -105,7 +105,7 @@ public class DocumentUriProvider extends ContentProvider {
     }
 
     protected static String getAuthority(Context c) {
-        return c.getString(R.string.document_uri_authority);
+        return AUTHORITY;
     }
 
 }

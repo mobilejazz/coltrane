@@ -30,6 +30,4 @@
     <string name="execute_pending_action" translatable="false">Complete</string>
     <string name="loading" translatable="false">Loading&#8230;</string>
     <string name="network_error">Network error</string>
-
-    <string name="document_uri_authority" translatable="false"></string>
 </resources>
