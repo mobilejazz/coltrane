@@ -3,27 +3,21 @@ package com.mobilejazz.coltrane.example;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.content.res.AssetFileDescriptor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Display;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.mobilejazz.coltrane.library.DocumentUriProvider;
 import com.mobilejazz.coltrane.library.DocumentsProvider;
 import com.mobilejazz.coltrane.library.DocumentsProviderRegistry;
 import com.mobilejazz.coltrane.library.UserRecoverableException;
-import com.mobilejazz.coltrane.library.utils.MimeIcon;
 import com.mobilejazz.coltrane.ui.DocumentBrowserActivity;
+import com.mobilejazz.coltrane.ui.DocumentUriHelper;
 import com.squareup.picasso.Picasso;
 
 import java.io.FileNotFoundException;
@@ -43,7 +37,8 @@ public class FileDetailActivity extends Activity {
 
         // get the documents thumbnail:
 
-        mProvider = DocumentsProviderRegistry.get().getProvider(getIntent().getStringExtra(DocumentBrowserActivity.EXTRA_PROVIDER));
+        final String providerId = getIntent().getStringExtra(DocumentBrowserActivity.EXTRA_PROVIDER);
+        mProvider = DocumentsProviderRegistry.get().getProvider(providerId);
         mDocumentId = getIntent().getStringExtra(DocumentBrowserActivity.EXTRA_DOCUMENT_ID);
 
         mImageView = (ImageView) findViewById(R.id.thumbnail);
@@ -53,7 +48,7 @@ public class FileDetailActivity extends Activity {
             public void onClick(View v) {
                 try {
                     Intent view = new Intent(Intent.ACTION_VIEW);
-                    view.setDataAndType(getIntent().getData(), getIntent().getType());
+                    view.setDataAndType(DocumentUriHelper.getUriFromIntent(BuildConfig.APPLICATION_ID + ".documentUriProvider", getIntent()), getIntent().getType());
                     startActivity(view);
                 } catch (ActivityNotFoundException e) {
                     Toast.makeText(FileDetailActivity.this, getString(R.string.error_no_activity), Toast.LENGTH_LONG).show();
