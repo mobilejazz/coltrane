@@ -1,3 +1,5 @@
+![Coltrane](https://raw.githubusercontent.com/mobilejazz/metadata/master/images/banners/mobile-jazz-coltrane-android.jpg)
+
 # Coltrane - An Android File Picker
 
 This library provides functionality for browsing through files and selecting a file on Android. It
